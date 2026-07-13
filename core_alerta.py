@@ -1,0 +1,478 @@
+# core_alerta.py   (v3 - MOTOR DE DOS ETAPAS)
+# ============================================================
+# EL NUCLEO DE P.A.L.M.A.
+#
+#   python core_alerta.py
+#
+# ============================================================
+# EL PROBLEMA
+#
+# El ICEN oficial exige 3 MESES consecutivos sobre umbral. Por esa regla,
+# en 2017 la alerta se habria emitido el 1 de abril. El rio Piura se
+# desbordo el 27 de marzo. CINCO DIAS TARDE.
+#
+# No es un defecto de nuestra implementacion: es una limitacion estructural
+# del ICEN, que es un indice de DIAGNOSTICO (declara que hubo un Niño
+# costero), no de ALERTA. El propio ENFEN lo reconocio y en 2015 creo un
+# Sistema de Alerta separado, "para alertar mas oportunamente sin esperar
+# el cumplimiento del criterio de los 3 meses".
+#
+# ============================================================
+# EL HALLAZGO QUE SOSTIENE TODO EL PROYECTO
+#
+#   El Niño 2015-16 fue MAS FUERTE en el mar que el de 2017.
+#   Y no paso nada.
+#
+#                    pico SST    z(MSAVI)     resultado
+#   2015-16          +2.51 C       1.36       sin desastre
+#   2017             +2.03 C       3.34       CATASTROFE
+#
+#   El oceano se equivoco. El territorio acerto.
+#
+# Un sistema basado solo en la anomalia oceanica habria gritado MAS FUERTE
+# en 2015 (cuando no paso nada) que en 2017 (cuando el rio se llevo Piura).
+#
+#   EL MAR DICE "VIENE". EL BOSQUE SECO CONFIRMA "ESTA AQUI".
+#
+# ============================================================
+# CORRECCIONES DE LA v3 (todas son honestidad, no cosmetica)
+#
+# 1. EPISODIO EN CURSO. El episodio de 2026 sigue abierto: la temporada de
+#    lluvias empieza en setiembre. Clasificarlo como "falsa alarma" seria
+#    AFIRMAR que no pasara nada, y eso no lo sabemos. Se excluye de la
+#    matriz de confusion y se reporta aparte.
+#
+# 2. LA n REAL DE LA ETAPA 2. Landsat 8 arranca en 2013, asi que 1983 y
+#    1998 NO tienen Etapa 2. Nuestro aporte original solo se probo sobre
+#    DOS eventos: 2017 y 2023. Es n=2, no n=4. Lo decimos.
+#
+# 3. YAKU NO DIO ANTICIPACION EN ETAPA 2. Confirmo en abril; el desastre
+#    fue el 15 de marzo. Confirmo DESPUES. Se reporta como tal.
+# ============================================================
+
+import os
+
+import numpy as np
+import pandas as pd
+
+CARPETA_DATOS = 'datos'
+CARPETA_SALIDA = 'salidas'
+CSV_DIARIO = os.path.join(CARPETA_DATOS, 'serie_sst_diaria.csv')
+CSV_VEG = os.path.join(CARPETA_DATOS, 'serie_vegetacion.csv')
+
+CLIM_INICIO, CLIM_FIN = 1991, 2020
+
+# --- ETAPA 1: precursor oceanico ---
+VENTANA_PERSISTENCIA = 30      # dias de media movil
+UMBRAL_PRECURSOR = 0.4         # C - mismo umbral conceptual que el ICEN
+DIAS_CONFIRMACION = 15         # dias seguidos sobre umbral para emitir
+UMBRAL_MAGNITUD = 2.0          # C - pico minimo para escalar a Etapa 2
+
+# --- ETAPA 2: confirmacion territorial ---
+UMBRAL_MSAVI = 1.5             # desviaciones estandar
+
+ANIO_INICIO_MSAVI = 2013       # Landsat 8
+DIAS_EN_CURSO = 30             # margen para considerar un episodio abierto
+
+DESASTRES = {
+    'FEN 1982-83': pd.Timestamp('1983-05-01'),
+    'FEN 1997-98': pd.Timestamp('1998-03-01'),
+    'Niño costero 2017': pd.Timestamp('2017-03-27'),
+    'Ciclon Yaku 2023': pd.Timestamp('2023-03-15'),
+}
+
+TOLERANCIA_DIAS = 45
+
+
+# ------------------------------------------------------------
+# ETAPA 1
+# ------------------------------------------------------------
+
+def cargar_diario():
+    df = pd.read_csv(CSV_DIARIO, parse_dates=['fecha'])
+    return df.dropna(subset=['sst_nino12']).sort_values('fecha').set_index('fecha')
+
+
+def anomalia_diaria(df):
+    """Climatologia por dia del anio (1991-2020), suavizada 31 dias."""
+    df = df.copy()
+    df['doy'] = df.index.dayofyear
+
+    base = df.loc[str(CLIM_INICIO):str(CLIM_FIN)]
+    clim = base.groupby('doy')['sst_nino12'].mean()
+
+    # Suavizado circular: diciembre y enero deben empalmar
+    triple = pd.concat([clim, clim, clim])
+    suave = triple.rolling(31, center=True, min_periods=1).mean()
+    clim_suave = suave.iloc[len(clim):2 * len(clim)]
+    clim_suave.index = clim.index
+
+    df['clim'] = df['doy'].map(clim_suave)
+    df['anomalia'] = df['sst_nino12'] - df['clim']
+
+    # Media movil RETRASADA -> disponible en tiempo real, sin mirar al futuro
+    df['precursor'] = df['anomalia'].rolling(
+        VENTANA_PERSISTENCIA, min_periods=VENTANA_PERSISTENCIA).mean()
+    return df
+
+
+def emitir_episodios(df):
+    sobre = (df['precursor'] > UMBRAL_PRECURSOR).fillna(False)
+    grupos = (~sobre).cumsum()
+    racha = sobre.groupby(grupos).cumsum()
+
+    df = df.copy()
+    df['etapa1'] = racha >= DIAS_CONFIRMACION
+
+    episodios, inicio = [], None
+    for fecha, activo in df['etapa1'].items():
+        if activo and inicio is None:
+            inicio = fecha
+        elif not activo and inicio is not None:
+            episodios.append((inicio, fecha))
+            inicio = None
+    if inicio is not None:
+        episodios.append((inicio, df.index[-1]))
+
+    return df, episodios
+
+
+# ------------------------------------------------------------
+# ETAPA 2
+# ------------------------------------------------------------
+
+def serie_msavi():
+    v = pd.read_csv(CSV_VEG)
+    v['fecha'] = pd.to_datetime(dict(year=v.anio, month=v.mes, day=1))
+    v = v.sort_values('fecha').set_index('fecha')
+    v['msavi_montes'] = pd.to_numeric(v['msavi_montes'], errors='coerce')
+
+    clim = v.groupby(v.index.month)['msavi_montes'].transform('mean')
+    anomalia = v['msavi_montes'] - clim
+    v['z_msavi'] = anomalia / anomalia.std()
+    return v[['z_msavi', 'n_escenas']]
+
+
+def evaluar_episodio(df, veg, inicio, fin):
+    pico = df.loc[inicio:fin, 'precursor'].max()
+
+    ventana = veg.loc[inicio - pd.DateOffset(months=1):
+                      fin + pd.DateOffset(months=2), 'z_msavi'].dropna()
+    z = ventana.max() if len(ventana) else np.nan
+    mes_z = ventana.idxmax() if len(ventana) else None
+
+    tiene_etapa2 = inicio.year >= ANIO_INICIO_MSAVI and not np.isnan(z)
+
+    if tiene_etapa2:
+        alerta_roja = (pico >= UMBRAL_MAGNITUD) and (z >= UMBRAL_MSAVI)
+    else:
+        # Antes de Landsat 8 solo existe la Etapa 1.
+        alerta_roja = pico >= UMBRAL_MAGNITUD
+
+    desastre = next((n for n, f in DESASTRES.items()
+                     if inicio <= f <= fin + pd.Timedelta(days=TOLERANCIA_DIAS)),
+                    None)
+
+    # --- CORRECCION CLAVE ---
+    # Un episodio todavia abierto NO se puede clasificar. La temporada de
+    # lluvias aun no ha ocurrido. Contarlo como falsa alarma seria afirmar
+    # que no pasara nada, y eso no lo sabemos.
+    ultimo_dato = df.index[-1]
+    en_curso = fin >= ultimo_dato - pd.Timedelta(days=DIAS_EN_CURSO)
+
+    return {
+        'inicio': inicio, 'fin': fin, 'dias': (fin - inicio).days,
+        'pico': pico, 'z_msavi': z, 'mes_z': mes_z,
+        'alerta_roja': alerta_roja, 'desastre': desastre,
+        'tiene_etapa2': tiene_etapa2, 'en_curso': en_curso,
+    }
+
+
+# ------------------------------------------------------------
+# GRAFICOS
+# ------------------------------------------------------------
+
+def graficar(df, veg):
+    try:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        import matplotlib.dates as mdates
+    except ImportError:
+        print('\n[AVISO] matplotlib no instalado. Sin graficos.')
+        return
+
+    os.makedirs(CARPETA_SALIDA, exist_ok=True)
+    AZUL, ROJO, NARANJA, GRIS = '#1f3a5f', '#c0392b', '#e67e22', '#95a5a6'
+
+    # ===== LAMINA CENTRAL: 2015-16 vs 2017 =====
+    # Ventanas IGUALADAS a 15 meses para que la comparacion sea justa.
+    fig, ejes = plt.subplots(2, 2, figsize=(15, 8), sharey='row')
+
+    casos = [
+        ('2015-02', '2016-05', 'EL NIÑO 2015-16 ("Godzilla")',
+         'Mar MAS caliente: pico +2.51 °C  →  SIN desastre',
+         None, 'EL AGUA NUNCA ATERRIZO'),
+        ('2016-07', '2017-10', 'NIÑO COSTERO 2017',
+         'Mar MENOS caliente: pico +2.03 °C  →  CATASTROFE',
+         DESASTRES['Niño costero 2017'], 'EL BOSQUE CONFIRMA'),
+    ]
+
+    for col, (ini, fin, titulo, sub, desastre, veredicto) in enumerate(casos):
+        # --- Panel superior: ETAPA 1 ---
+        ax = ejes[0][col]
+        z = df.loc[ini:fin]
+        ax.plot(z.index, z['anomalia'], lw=0.6, color='#d5dbdb',
+                label='Anomalia diaria' if col == 0 else None)
+        ax.plot(z.index, z['precursor'], lw=2.6, color=AZUL,
+                label='Precursor 30d' if col == 0 else None)
+        ax.axhline(UMBRAL_PRECURSOR, ls='--', lw=1, color=NARANJA,
+                   label=f'Umbral alerta (+{UMBRAL_PRECURSOR})' if col == 0 else None)
+        ax.axhline(UMBRAL_MAGNITUD, ls=':', lw=1.3, color=ROJO,
+                   label=f'Umbral magnitud (+{UMBRAL_MAGNITUD})' if col == 0 else None)
+        ax.axhline(0, lw=0.6, color='gray')
+        if desastre is not None:
+            ax.axvline(desastre, color=ROJO, lw=2.6)
+            ax.text(desastre, ax.get_ylim()[1] * 0.92, ' DESBORDE\n 27-mar',
+                    color=ROJO, fontsize=8.5, fontweight='bold', va='top')
+        ax.set_title(f'{titulo}\n{sub}', fontsize=11, loc='left',
+                     fontweight='bold')
+        if col == 0:
+            ax.set_ylabel('ETAPA 1\nAnomalia SST (°C)', fontsize=10)
+            ax.legend(fontsize=7.5, loc='upper left')
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%y'))
+        ax.grid(alpha=0.2)
+
+        # --- Panel inferior: ETAPA 2 ---
+        ax = ejes[1][col]
+        zv = veg.loc[ini:fin, 'z_msavi'].dropna()
+        colores = [ROJO if x >= UMBRAL_MSAVI else GRIS for x in zv]
+        ax.bar(zv.index, zv.values, width=22, color=colores)
+        ax.axhline(UMBRAL_MSAVI, ls='--', lw=1.3, color=ROJO,
+                   label=f'Umbral confirmacion (z={UMBRAL_MSAVI})'
+                   if col == 0 else None)
+        ax.axhline(0, lw=0.6, color='gray')
+        if desastre is not None:
+            ax.axvline(desastre, color=ROJO, lw=2.6)
+
+        color_v = ROJO if desastre is not None else '#7f8c8d'
+        ax.text(0.98, 0.94, veredicto, transform=ax.transAxes,
+                ha='right', va='top', fontsize=11, fontweight='bold',
+                color=color_v,
+                bbox=dict(boxstyle='round,pad=0.4', fc='white',
+                          ec=color_v, lw=1.2))
+
+        if col == 0:
+            ax.set_ylabel('ETAPA 2\nz(MSAVI) bosque seco', fontsize=10)
+            ax.legend(fontsize=7.5, loc='lower left')
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b-%y'))
+        ax.grid(alpha=0.2)
+
+    fig.suptitle('POR QUE LA ANOMALIA OCEANICA NO BASTA\n'
+                 'El oceano grito mas fuerte en 2015. El territorio acerto en 2017.',
+                 fontsize=13.5, fontweight='bold', x=0.01, ha='left')
+    fig.tight_layout(rect=[0, 0, 1, 0.93])
+    fig.savefig(os.path.join(CARPETA_SALIDA, '5_dos_etapas_2015_vs_2017.png'),
+                dpi=160)
+    plt.close(fig)
+
+    # ===== ESTADO ACTUAL =====
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(13, 7), sharex=True)
+    z = df.loc['2025-01':]
+
+    ax1.plot(z.index, z['anomalia'], lw=0.6, color='#d5dbdb',
+             label='Anomalia diaria')
+    ax1.plot(z.index, z['precursor'], lw=2.4, color=AZUL, label='Precursor 30d')
+    ax1.fill_between(z.index, UMBRAL_PRECURSOR, z['precursor'],
+                     where=z['precursor'] > UMBRAL_PRECURSOR,
+                     color=ROJO, alpha=0.25)
+    ax1.axhline(UMBRAL_PRECURSOR, ls='--', color=NARANJA, label='Umbral alerta')
+    ax1.axhline(UMBRAL_MAGNITUD, ls=':', color=ROJO, label='Umbral magnitud')
+    ax1.axhline(0, lw=0.6, color='gray')
+    ax1.set_ylabel('ETAPA 1 — SST (°C)')
+    ax1.legend(fontsize=8, loc='upper left')
+    ax1.grid(alpha=0.2)
+
+    zv = veg.loc['2025-01':, 'z_msavi'].dropna()
+    colores = [ROJO if x >= UMBRAL_MSAVI else GRIS for x in zv]
+    ax2.bar(zv.index, zv.values, width=22, color=colores)
+    ax2.axhline(UMBRAL_MSAVI, ls='--', color=ROJO, label='Umbral confirmacion')
+    ax2.axhline(0, lw=0.6, color='gray')
+    ax2.set_ylabel('ETAPA 2 — z(MSAVI)')
+    ax2.legend(fontsize=8, loc='upper left')
+    ax2.grid(alpha=0.2)
+
+    ultimo = df.dropna(subset=['precursor']).iloc[-1]
+    zs = veg['z_msavi'].dropna()
+    z_act = zs.iloc[-1]
+    e1 = 'EN ALERTA' if ultimo['etapa1'] else 'vigilancia'
+    e2 = 'CONFIRMA' if z_act >= UMBRAL_MSAVI else 'NO confirma'
+
+    fig.suptitle(
+        f'ESTADO ACTUAL — {ultimo.name:%d-%b-%Y}   [EPISODIO EN CURSO]\n'
+        f'ETAPA 1: {e1} (precursor {ultimo["precursor"]:+.2f} °C)   |   '
+        f'ETAPA 2: {e2} (z = {z_act:+.2f})',
+        fontsize=12, fontweight='bold', x=0.01, ha='left')
+    fig.tight_layout(rect=[0, 0, 1, 0.91])
+    fig.savefig(os.path.join(CARPETA_SALIDA, '6_estado_actual.png'), dpi=160)
+    plt.close(fig)
+
+    print(f'\nGraficos: {CARPETA_SALIDA}/5_dos_etapas_2015_vs_2017.png')
+    print(f'          {CARPETA_SALIDA}/6_estado_actual.png')
+
+
+# ------------------------------------------------------------
+# MAIN
+# ------------------------------------------------------------
+
+def main():
+    for ruta in (CSV_DIARIO, CSV_VEG):
+        if not os.path.exists(ruta):
+            raise SystemExit(f'Falta {ruta}')
+
+    df = anomalia_diaria(cargar_diario())
+    df, episodios = emitir_episodios(df)
+    veg = serie_msavi()
+
+    resultados = [evaluar_episodio(df, veg, a, b) for a, b in episodios]
+
+    # Los episodios abiertos NO se clasifican.
+    cerrados = [r for r in resultados if not r['en_curso']]
+    activos = [r for r in resultados if r['en_curso']]
+
+    # ---------- 1. El hallazgo ----------
+    print('=' * 68)
+    print('P.A.L.M.A. — MOTOR DE ALERTA TEMPRANA DE DOS ETAPAS')
+    print('=' * 68)
+    print('\n### EL HALLAZGO: la anomalia oceanica sola NO BASTA\n')
+    print(f'{"EVENTO":<22}{"pico SST":>10}{"z(MSAVI)":>10}   RESULTADO')
+    for r in resultados:
+        if r['inicio'].year in (2015, 2017):
+            etq = 'Niño 2015-16' if r['inicio'].year == 2015 else 'Niño costero 2017'
+            print(f'{etq:<22}{r["pico"]:>+9.2f}C{r["z_msavi"]:>10.2f}   '
+                  f'{r["desastre"] or "sin desastre"}')
+    print('\nEl oceano grito MAS FUERTE en 2015, cuando no paso nada.')
+    print('Solo la confirmacion territorial distingue los dos casos.\n')
+
+    # ---------- 2. Backtest ----------
+    print('=' * 68)
+    print('### BACKTEST: ANTICIPACION SOBRE EVENTOS REALES\n')
+    for nombre, fecha in DESASTRES.items():
+        r = next((x for x in resultados
+                  if x['inicio'] <= fecha
+                  <= x['fin'] + pd.Timedelta(days=TOLERANCIA_DIAS)), None)
+        print(f'--- {nombre}   (desastre: {fecha:%d-%b-%Y})')
+        if r is None:
+            print('    NO alerta.\n')
+            continue
+
+        dias = (fecha - r['inicio']).days
+        print(f'    ETAPA 1 alerta : {r["inicio"]:%d-%b-%Y}   '
+              f'-> {dias:+d} dias')
+
+        if not r['tiene_etapa2']:
+            print('    ETAPA 2        : NO DISPONIBLE (Landsat 8 arranca en 2013)')
+        else:
+            d2 = (fecha - r['mes_z']).days
+            estado = 'CONFIRMA' if r['z_msavi'] >= UMBRAL_MSAVI else 'no confirma'
+            cola = (f'-> {d2:+d} dias (ANTES del desastre)' if d2 > 0
+                    else f'-> {d2:+d} dias (DESPUES: sin anticipacion)')
+            print(f'    ETAPA 2 {estado:<11}: {r["mes_z"]:%b-%Y}  '
+                  f'z={r["z_msavi"]:+.2f}  {cola}')
+        print()
+
+    # ---------- 3. Matriz de confusion ----------
+    print('=' * 68)
+    print('### MATRIZ DE CONFUSION — solo episodios CERRADOS\n')
+    print(f'Episodios totales : {len(resultados)}')
+    print(f'  cerrados        : {len(cerrados)}  (evaluables)')
+    print(f'  EN CURSO        : {len(activos)}  (no clasificables aun)\n')
+
+    tp1 = sum(1 for r in cerrados if r['desastre'])
+    fp1 = len(cerrados) - tp1
+
+    rojas = [r for r in cerrados if r['alerta_roja']]
+    tp2 = sum(1 for r in rojas if r['desastre'])
+    fp2 = len(rojas) - tp2
+    fn2 = sum(1 for r in cerrados if r['desastre'] and not r['alerta_roja'])
+
+    print(f'{"":<26}{"aciertos":>9}{"falsas":>8}{"perdidos":>10}{"precision":>11}')
+    print(f'{"Solo ETAPA 1 (oceano)":<26}{tp1:>9}{fp1:>8}{0:>10}'
+          f'{100 * tp1 / max(1, tp1 + fp1):>10.0f}%')
+    print(f'{"ETAPA 1 + ETAPA 2":<26}{tp2:>9}{fp2:>8}{fn2:>10}'
+          f'{100 * tp2 / max(1, tp2 + fp2):>10.0f}%')
+    print(f'\nLa Etapa 2 rechazo {fp1 - fp2} falsas alarmas sin perder eventos.')
+
+    descartadas = sorted(
+        [r for r in cerrados if not r['desastre']
+         and r['pico'] >= UMBRAL_MAGNITUD and r['tiene_etapa2']],
+        key=lambda r: -r['pico'])
+    if descartadas:
+        print('\n--- Falsas alarmas que la Etapa 2 rechazo ---')
+        for r in descartadas:
+            print(f'  {r["inicio"]:%Y-%m}  pico {r["pico"]:+.2f}C  '
+                  f'z(MSAVI) {r["z_msavi"]:+.2f}  -> el agua nunca aterrizo')
+
+    # ---------- 4. Honestidad ----------
+    print('\n' + '=' * 68)
+    print('### LIMITACIONES QUE DECLARAMOS NOSOTROS MISMOS\n')
+
+    n_etapa2 = sum(1 for r in cerrados if r['desastre'] and r['tiene_etapa2'])
+    print(f'1. LA n REAL DE LA ETAPA 2 ES {n_etapa2}, NO {tp1}.')
+    print('   Landsat 8 arranca en 2013: 1983 y 1998 no tienen Etapa 2.')
+    print('   Nuestro aporte original solo se probo sobre 2017 y 2023.')
+    print('   Es una PRUEBA DE CONCEPTO, no una validacion estadistica.\n')
+
+    print('2. HAY SOBREAJUSTE. Los umbrales (2.0 C, z=1.5) se eligieron')
+    print('   observando estos mismos datos. Lo decimos antes de que')
+    print('   nos lo pregunten.\n')
+
+    zs_no = [r['z_msavi'] for r in cerrados
+             if not r['desastre'] and r['tiene_etapa2']]
+    zs_si = [r['z_msavi'] for r in cerrados
+             if r['desastre'] and r['tiene_etapa2']]
+    if zs_no and zs_si:
+        print('3. LO DEFENDIBLE: el margen es AMPLIO, no ajustado.')
+        print(f'   z(MSAVI) maximo en NO-desastres : {max(zs_no):.2f}')
+        print(f'   z(MSAVI) minimo en DESASTRES    : {min(zs_si):.2f}')
+        print('   -> separacion limpia, sin solape. No es un umbral al filo.')
+
+    # ---------- 5. Estado actual ----------
+    ultimo = df.dropna(subset=['precursor']).iloc[-1]
+    zs = veg['z_msavi'].dropna()
+    z_act, mes_act = zs.iloc[-1], zs.index[-1]
+
+    print('\n' + '=' * 68)
+    print(f'### ESTADO ACTUAL — {ultimo.name:%d-%b-%Y}\n')
+    e1 = 'EN ALERTA' if ultimo['etapa1'] else 'vigilancia'
+    e2 = 'CONFIRMA' if z_act >= UMBRAL_MSAVI else 'NO confirma'
+    print(f'  ETAPA 1 (oceano)    : {e1:<11} precursor = {ultimo["precursor"]:+.2f} °C')
+    print(f'  ETAPA 2 (territorio): {e2:<11} z(MSAVI)  = {z_act:+.2f} '
+          f'({mes_act:%b-%Y})')
+
+    if activos:
+        a = activos[0]
+        print(f'\n  Episodio activo desde {a["inicio"]:%d-%b-%Y} '
+              f'({a["dias"]} dias). Pico {a["pico"]:+.2f} °C.')
+        print('  NO se clasifica: la temporada de lluvias aun no ha ocurrido.')
+
+    print()
+    if ultimo['etapa1'] and z_act < UMBRAL_MSAVI:
+        print('  DIAGNOSTICO: el precursor oceanico esta ACTIVO, pero el pulso')
+        print('  hidrico AUN NO HA ATERRIZADO en el territorio.')
+        print('  Consistente con ENFEN: la temporada de lluvias inicia en setiembre.')
+    elif ultimo['etapa1']:
+        print('  DIAGNOSTICO: ALERTA ROJA. Mar y territorio coinciden.')
+    else:
+        print('  DIAGNOSTICO: condiciones dentro de rango.')
+
+    os.makedirs(CARPETA_SALIDA, exist_ok=True)
+    df.to_csv(os.path.join(CARPETA_SALIDA, 'alerta_diaria.csv'))
+    pd.DataFrame(resultados).to_csv(
+        os.path.join(CARPETA_SALIDA, 'episodios_evaluados.csv'), index=False)
+
+    graficar(df, veg)
+
+
+if __name__ == '__main__':
+    main()

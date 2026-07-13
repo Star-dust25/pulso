@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Entorno virtual
+venv/
+.venv/
+
+# Credenciales (NUNCA subir)
+*.json
+.env
+secrets.toml.\venv\Scripts\activate
+
+# archivo/
+archivo/
