@@ -461,18 +461,21 @@ with tab2:
         with st.spinner('Consultando servidores satelitales...'):
             try:
                 url, kpi = capa_mapa(ecosistema, str(f_ini), str(f_fin))
-            except Exception:
-                # NUNCA mostrar el traceback crudo. Un stack trace en pantalla
-                # dice "esto se rompio". Un mensaje controlado dice "esto lo
-                # teniamos previsto". Ante un jurado, esa diferencia es todo.
+            except Exception as e:
+                # NUNCA mostrar el traceback crudo AL JURADO. Un stack trace en
+                # pantalla dice "esto se rompio"; un mensaje controlado dice
+                # "esto lo teniamos previsto". Pero el detalle tecnico SI debe
+                # estar disponible, plegado, para poder diagnosticar.
                 url, kpi = None, None
                 st.markdown(ui.banda_alerta(
                     'ambar', 'Capa satelital no disponible',
                     'No se pudo contactar con Google Earth Engine para esta capa. '
                     'El motor de alerta opera sobre datos locales y permanece '
-                    'operativo: las pestañas de Estado, Backtest y Validacion no '
-                    'se ven afectadas.'
+                    'operativo: las pestañas de Estado, Backtest, Validacion e '
+                    'Impacto no se ven afectadas.'
                 ), unsafe_allow_html=True)
+                with st.expander('Diagnostico tecnico'):
+                    st.code(f'{type(e).__name__}: {e}')
 
         etiquetas = {
             'LITORAL': ('Temperatura superficial del mar', '°C',
