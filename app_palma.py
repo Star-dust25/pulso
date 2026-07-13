@@ -177,15 +177,21 @@ def iniciar_ee():
     Si el fallo se cachea (@st.cache_resource), una caida temporal de red
     deja la app tuerta para siempre: aunque la conexion vuelva, Streamlit
     sigue sirviendo el False antiguo y el mapa nunca reaparece.
+
+    Guardamos el motivo del fallo en session_state. Un except mudo convierte
+    cualquier problema en "no hay internet", que es justo lo que impide
+    diagnosticarlo.
     """
     if st.session_state.get('ee_listo'):
         return True
     try:
         _probar_conexion_ee()
         st.session_state['ee_listo'] = True
+        st.session_state.pop('ee_error', None)
         return True
-    except Exception:
+    except Exception as e:
         st.session_state['ee_listo'] = False
+        st.session_state['ee_error'] = f'{type(e).__name__}: {e}'
         return False
 
 
@@ -439,9 +445,15 @@ with tab2:
     if not iniciar_ee():
         st.markdown(ui.banda_alerta(
             'ambar', 'Sin conexion a Google Earth Engine',
-            'El mapa requiere red. Las pestañas de Estado, Backtest y Validacion '
-            'operan sobre datos locales y siguen disponibles.'
+            'El mapa requiere red. Las pestañas de Estado, Backtest, Validacion '
+            'e Impacto operan sobre datos locales y siguen disponibles.'
         ), unsafe_allow_html=True)
+        with st.expander('Diagnostico tecnico'):
+            st.code(st.session_state.get('ee_error', 'sin detalle'))
+            st.caption(
+                'Cuenta de servicio detectada: '
+                f'{_hay_cuenta_de_servicio()}'
+            )
     else:
         import folium
         from streamlit_folium import st_folium
