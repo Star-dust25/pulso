@@ -610,8 +610,8 @@ with tab3:
                 unsafe_allow_html=True)
     c2.markdown(ui.dato('Precursor diario P.A.L.M.A.', '+68 dias',
                         'Etapa 1 · alerta el 18-ene-2017'), unsafe_allow_html=True)
-    c3.markdown(ui.dato('Confirmacion territorial', '+40 dias',
-                        'Etapa 2 · el bosque confirma en feb-2017'),
+    c3.markdown(ui.dato('Confirmacion territorial', '+26 dias',
+                        'Etapa 2 · compuesto de feb-2017, disponible el 1-mar'),
                 unsafe_allow_html=True)
 
     st.markdown(ui.nota_metodologica(
@@ -755,7 +755,7 @@ with tab5:
         'P.A.L.M.A. mide si el agua efectivamente ATERRIZA en el territorio.',
         'La confirmacion territorial elevo la precision del 11% al 100% sobre '
         '35 episodios (1982-2026), rechazando 31 falsas alarmas sin perder '
-        'ningun evento. En 2017 confirmo 40 dias antes del desborde.',
+        'ningun evento. En 2017 confirmo 26 dias antes del desborde.',
         principal=True,
     ), unsafe_allow_html=True)
 
@@ -835,12 +835,12 @@ with tab5:
          'Se monitorea la respuesta del bosque seco. Se revisan cotas de '
          'operacion de los reservorios y se evalua descarga preventiva.',
          'ene-feb 2017'),
-        ('3', 'DIA ~28 — ETAPA 2 CONFIRMA',
+        ('3', 'DIA 42 — ETAPA 2 CONFIRMA',
          'COER Piura · Municipios · INDECI',
          'El bosque seco reverdece por encima de lo normal: el agua ESTA cayendo. '
          'La alerta escala. Se activan protocolos de evacuacion preventiva en '
          'zonas de alta susceptibilidad (capa ZEE de peligros).',
-         'feb-2017 · z = +3.15 · 40 dias antes'),
+         'compuesto feb-2017 · z = +3.15 · 26 dias antes'),
         ('4', 'DIA 68 — EVENTO',
          'Poblacion expuesta',
          'Desborde del rio Piura. Con la cadena anterior operativa, la ventana de '
