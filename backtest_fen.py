@@ -56,7 +56,13 @@ CATEGORIAS = [
 ]
 
 # Desastres documentados en Piura (fuente: SENAMHI/COEN/prensa).
+#
+# CORRECCION: faltaba el FEN 1982-83. Sin el, este script clasificaba el
+# mega-Niño de 1983 -- uno de los peores desastres de la historia de Piura --
+# como FALSA ALARMA, y reportaba una precision distinta a la de core_alerta.py.
+# Un jurado piurano lo habria detectado al instante.
 DESASTRES = {
+    'FEN 1982-83': pd.Timestamp('1983-05-01'),
     'FEN 1997-98 (4,400 m3/s)': pd.Timestamp('1998-03-01'),
     'Niño costero 2017 (3,468 m3/s)': pd.Timestamp('2017-03-27'),
     'Ciclon Yaku 2023 (~1,700 m3/s)': pd.Timestamp('2023-03-15'),
