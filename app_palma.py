@@ -55,13 +55,42 @@ CARPETA_SALIDA = 'salidas'
 # CAPA OFFLINE — todo lo que no necesita red
 # ============================================================
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=1800, show_spinner=False)
 def cargar_alerta():
-    """Serie diaria de SST con precursor y estado de Etapa 1."""
+    """
+    Serie diaria de SST con precursor y estado de Etapa 1.
+
+    INTENTA leer los ultimos dias directamente de OISST (dato vivo) y los
+    fusiona con el historico del CSV. Si Earth Engine no responde, opera
+    solo con el CSV: el sistema NUNCA deja de dar un diagnostico, solo
+    cambia la frescura del dato — y lo declara en pantalla.
+
+    Devuelve (df, episodios, en_vivo).
+    """
     from core_alerta import cargar_diario, anomalia_diaria, emitir_episodios
-    df = anomalia_diaria(cargar_diario())
+
+    historico = cargar_diario()
+    en_vivo = False
+
+    motivo = None
+    if not iniciar_ee():
+        motivo = 'Earth Engine no disponible'
+    else:
+        try:
+            from core_vivo import sst_reciente, fusionar
+            historico = fusionar(historico, sst_reciente())
+            en_vivo = True
+        except Exception as e:
+            # Degradacion prevista: seguimos con el CSV. Pero el motivo NO se
+            # silencia: un except mudo convierte cualquier problema en el
+            # problema que esperabas, y hace imposible diagnosticarlo.
+            motivo = f'{type(e).__name__}: {e}'
+
+    st.session_state['motivo_respaldo'] = motivo
+
+    df = anomalia_diaria(historico)
     df, episodios = emitir_episodios(df)
-    return df, episodios
+    return df, episodios, en_vivo
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -73,7 +102,7 @@ def cargar_msavi():
 @st.cache_data(ttl=3600, show_spinner=False)
 def cargar_episodios_evaluados():
     from core_alerta import evaluar_episodio
-    df, episodios = cargar_alerta()
+    df, episodios, _ = cargar_alerta()
     veg = cargar_msavi()
     return [evaluar_episodio(df, veg, a, b) for a, b in episodios]
 
@@ -353,7 +382,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 with tab1:
     from core_alerta import (UMBRAL_PRECURSOR, UMBRAL_MAGNITUD, UMBRAL_MSAVI)
 
-    df_alerta, episodios = cargar_alerta()
+    df_alerta, episodios, en_vivo = cargar_alerta()
     veg = cargar_msavi()
 
     ultimo = df_alerta.dropna(subset=['precursor']).iloc[-1]
@@ -394,7 +423,8 @@ with tab1:
             f'> +{UMBRAL_PRECURSOR} °C sostenido 15 dias',
             etapa1_activa,
             f'Anomalia de TSM en region Niño 1+2, media movil de 30 dias. '
-            f'NOAA OISST v2.1 · dato al {ultimo.name:%d-%b-%Y}',
+            f'NOAA OISST v2.1 · <b>{"consulta en vivo" if en_vivo else "respaldo local"}'
+            f'</b> · dato al {ultimo.name:%d-%b-%Y}',
         ), unsafe_allow_html=True)
 
     with c2:
@@ -405,7 +435,8 @@ with tab1:
             f'z(MSAVI) ≥ {UMBRAL_MSAVI}',
             etapa2_activa,
             f'Anomalia estandarizada del vigor vegetal del bosque seco '
-            f'(18,673 km²). Landsat 8 C2 L2 · dato de {mes_z:%b-%Y}',
+            f'(18,673 km²). Landsat 8 C2 L2 · <b>actualizacion mensual</b> '
+            f'· dato de {mes_z:%b-%Y}',
         ), unsafe_allow_html=True)
 
     st.markdown('<div style="height:22px;"></div>', unsafe_allow_html=True)
@@ -423,6 +454,28 @@ with tab1:
     ax.axhline(0, lw=0.6, color=ui.BORDE_FUERTE)
     ax.set_ylabel('Anomalia SST (°C)', color=ui.TEXTO_TENUE, fontsize=12)
     st.pyplot(fig, use_container_width=True)
+
+    cadencia = (
+        'CADENCIA DE LOS DATOS. La Etapa 1 consulta OISST <b>en vivo</b> cada vez '
+        'que se abre el sistema: el dato del mar tiene uno o dos dias de antiguedad, '
+        'la latencia de publicacion de la NOAA. La Etapa 2 se actualiza '
+        '<b>mensualmente</b>, y no puede ser de otro modo: Landsat 8 revisita el '
+        'mismo punto cada 16 dias y el MSAVI se compone por mes. Hablar de "tiempo '
+        'real" en un indice mensual no significaria nada. Un precursor oceanico '
+        'diario y una confirmacion territorial mensual: eso no es una limitacion '
+        'del sistema, es la fisica de los sensores.'
+        if en_vivo else
+        'CADENCIA DE LOS DATOS. En este momento el sistema opera sobre su '
+        '<b>respaldo local</b>: no pudo contactar con Earth Engine para refrescar '
+        'la serie oceanica. El diagnostico sigue siendo valido, pero el dato del '
+        'mar corresponde a la ultima descarga, no a hoy. La degradacion esta '
+        'prevista: el sistema nunca deja de emitir un diagnostico.'
+    )
+    st.markdown(ui.nota_metodologica(cadencia), unsafe_allow_html=True)
+
+    if not en_vivo:
+        with st.expander('Diagnostico tecnico'):
+            st.code(st.session_state.get('motivo_respaldo', 'sin detalle'))
 
     st.markdown(ui.nota_metodologica(
         'QUE HACE Y QUE NO HACE ESTE SISTEMA. P.A.L.M.A. NO compite con el ENFEN '
