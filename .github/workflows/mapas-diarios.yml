@@ -23,8 +23,18 @@
 # ------------------------------------------------------------
 # LO QUE HAY QUE CONFIGURAR ANTES (una vez)
 #
-# 1. Google Cloud: crear una cuenta de servicio y registrarla en Earth
-#    Engine (https://signup.earthengine.google.com/#!/service_accounts).
+# 1. Google Cloud: crear una cuenta de servicio en el proyecto de GEE y
+#    darle DOS roles en IAM (los dos hacen falta, y el error de que falte
+#    el segundo no menciona al primero):
+#       - Escritor de recursos de Earth Engine (Beta)
+#         Generar un thumbnail cuenta como ESCRITURA. Con el rol de
+#         Lector, ee.Initialize() funciona y luego falla cada imagen con
+#         'earthengine.thumbnails.create denied'.
+#       - Consumidor de Service Usage (roles/serviceusage.serviceUsageConsumer)
+#         Permite usar APIs facturables dentro del proyecto.
+#    Ya no hace falta registrar la cuenta en signup.earthengine.google.com:
+#    ese formulario desaparecio y basta con que el proyecto este registrado.
+#    Los cambios de IAM tardan varios minutos en propagarse.
 #
 # 2. GitHub: Settings > Secrets and variables > Actions > New secret
 #       Nombre : GEE_SERVICE_ACCOUNT
@@ -87,23 +97,31 @@ jobs:
         working-directory: backend
         run: python scripts/construir_mapas.py
 
-      - name: Verificar que el indice quedo utilizable
-        # Si TODOS los mapas fallan, el paso anterior termina en verde
-        # (el script captura las excepciones a proposito). Sin este
-        # guardia, el workflow celebraria una corrida que no produjo nada.
+      - name: Verificar que la corrida produjo mapas
         working-directory: backend
         run: |
           python - <<'PY'
           import json, sys
           with open('data/salidas/mapas/indice.json', encoding='utf-8') as f:
               d = json.load(f)
-          ok = [k for k, v in d.items() if v.get('archivo')]
-          print(f'{len(ok)}/{len(d)} mapas disponibles')
-          for k, v in d.items():
-              if not v.get('archivo'):
-                  print(f'  SIN MAPA: {k} -> {v.get("error")}')
-          if not ok:
-              sys.exit('Ningun mapa disponible: no se commitea nada.')
+          # 'disponible' NO es 'regenerado'. El script conserva el mapa
+          # del dia anterior cuando GEE falla, asi que el indice puede
+          # estar completo sin que la corrida haya generado nada. Contar
+          # disponibles dejaria el workflow en verde mientras los mapas
+          # envejecen sin que nadie se entere.
+          frescos = [k for k, v in d.items()
+                     if v.get('archivo') and 'error_ultimo_intento' not in v]
+          viejos  = [k for k, v in d.items() if 'error_ultimo_intento' in v]
+          rotos   = [k for k, v in d.items() if not v.get('archivo')]
+          print(f'{len(frescos)} regenerados, {len(viejos)} conservados, '
+                f'{len(rotos)} sin mapa')
+          for k in viejos:
+              print(f'  CONSERVADO: {k} -> {d[k]["error_ultimo_intento"][:120]}')
+          for k in rotos:
+              print(f'  SIN MAPA: {k} -> {d[k].get("error")}')
+          if not frescos:
+              sys.exit('Ningun mapa se regenero hoy. La app sigue servible '
+                       'con los anteriores, pero esto requiere atencion.')
           PY
 
       - name: Commitear si algo cambio
@@ -117,6 +135,6 @@ jobs:
           if git diff --staged --quiet; then
             echo 'Sin cambios: no se commitea.'
           else
-            git commit -m "Mapas actualizados $(date -u +%Y-%m-%d)"
+            git commit -m "Actualiza indice y mapas $(date -u +%Y-%m-%d)"
             git push
           fi
