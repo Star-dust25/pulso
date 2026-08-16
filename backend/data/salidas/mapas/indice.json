@@ -1,0 +1,74 @@
+{
+  "LITORAL__actual_2026": {
+    "archivo": "LITORAL__actual_2026.png",
+    "kpi": 22.65,
+    "banda": "sst",
+    "desde": "2026-07-17",
+    "hasta": "2026-08-15",
+    "generado": "2026-08-16"
+  },
+  "LITORAL__nino_2017": {
+    "archivo": "LITORAL__nino_2017.png",
+    "kpi": 23.855,
+    "banda": "sst",
+    "desde": "2017-01-01",
+    "hasta": "2017-05-31",
+    "generado": "2026-08-16"
+  },
+  "LITORAL__nino_2015_16": {
+    "archivo": "LITORAL__nino_2015_16.png",
+    "kpi": 23.115,
+    "banda": "sst",
+    "desde": "2015-10-01",
+    "hasta": "2016-03-31",
+    "generado": "2026-08-16"
+  },
+  "MONTES__actual_2026": {
+    "archivo": "MONTES__actual_2026.png",
+    "kpi": 0.193,
+    "banda": "MSAVI",
+    "desde": "2026-05-18",
+    "hasta": "2026-08-15",
+    "generado": "2026-08-16"
+  },
+  "MONTES__nino_2017": {
+    "archivo": "MONTES__nino_2017.png",
+    "kpi": 0.348,
+    "banda": "MSAVI",
+    "desde": "2017-01-01",
+    "hasta": "2017-05-31",
+    "generado": "2026-08-16"
+  },
+  "MONTES__nino_2015_16": {
+    "archivo": "MONTES__nino_2015_16.png",
+    "kpi": 0.137,
+    "banda": "MSAVI",
+    "desde": "2015-10-01",
+    "hasta": "2016-03-31",
+    "generado": "2026-08-16"
+  },
+  "ANDES__actual_2026": {
+    "archivo": "ANDES__actual_2026.png",
+    "kpi": 0.095,
+    "banda": "NDMI",
+    "desde": "2026-05-18",
+    "hasta": "2026-08-15",
+    "generado": "2026-08-16"
+  },
+  "ANDES__nino_2017": {
+    "archivo": "ANDES__nino_2017.png",
+    "kpi": 0.101,
+    "banda": "NDMI",
+    "desde": "2017-01-01",
+    "hasta": "2017-05-31",
+    "generado": "2026-08-16"
+  },
+  "ANDES__nino_2015_16": {
+    "archivo": "ANDES__nino_2015_16.png",
+    "kpi": 0.037,
+    "banda": "NDMI",
+    "desde": "2015-10-01",
+    "hasta": "2016-03-31",
+    "generado": "2026-08-16"
+  }
+}

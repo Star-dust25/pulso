@@ -1,4 +1,4 @@
-# DESPLIEGUE — P.A.L.M.A.
+# DESPLIEGUE — Pulso
 
 Objetivo: una URL publica para el codigo QR del stand.
 
@@ -25,9 +25,9 @@ Peso total de `datos/` + `salidas/`: unos pocos MB. Sin problema.
 ```powershell
 git init
 git add .
-git commit -m "P.A.L.M.A. - Sistema de Alerta Temprana ante El Nino Costero"
+git commit -m "Pulso - Sistema de Alerta Temprana ante El Nino Costero"
 git branch -M main
-git remote add origin https://github.com/TU_USUARIO/palma.git
+git remote add origin https://github.com/TU_USUARIO/pulso.git
 git push -u origin main
 ```
 
@@ -50,7 +50,7 @@ servicio.
 
 1. Entra a `console.cloud.google.com`, proyecto **monitor-bosqueseco**.
 2. `IAM y administracion` -> `Cuentas de servicio` -> **Crear**.
-   - Nombre: `palma-streamlit`
+   - Nombre: `pulso-streamlit`
    - Rol: `Earth Engine Resource Viewer` (o `Editor` si da problemas)
 3. Abre la cuenta creada -> pestaña `Claves` -> `Agregar clave` ->
    `Crear clave nueva` -> **JSON**. Se descarga un archivo.
@@ -58,14 +58,14 @@ servicio.
 4. Registra la cuenta en Earth Engine:
    `https://code.earthengine.google.com/register`
    -> registra el correo de la cuenta de servicio
-   (`palma-streamlit@monitor-bosqueseco.iam.gserviceaccount.com`)
+   (`pulso-streamlit@monitor-bosqueseco.iam.gserviceaccount.com`)
 
 ---
 
 ## PASO 3 — Streamlit Cloud
 
 1. `share.streamlit.io` -> inicia sesion con GitHub.
-2. `New app` -> elige el repo -> archivo principal: `app_palma.py`.
+2. `New app` -> elige el repo -> archivo principal: `app_pulso.py`.
 3. Antes de desplegar: `Advanced settings` -> **Secrets**.
    Pega el contenido del JSON traducido a formato TOML:
 
@@ -75,7 +75,7 @@ type = "service_account"
 project_id = "monitor-bosqueseco"
 private_key_id = "..."
 private_key = "-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
-client_email = "palma-streamlit@monitor-bosqueseco.iam.gserviceaccount.com"
+client_email = "pulso-streamlit@monitor-bosqueseco.iam.gserviceaccount.com"
 client_id = "..."
 auth_uri = "https://accounts.google.com/o/oauth2/auth"
 token_uri = "https://oauth2.googleapis.com/token"
@@ -115,7 +115,7 @@ Con la URL final (`https://TU-APP.streamlit.app`):
 - `qr-code-generator.com` o similar
 - Descarga en PNG, alta resolucion
 - Imprimelo GRANDE (minimo 10x10 cm) para que se escanee de lejos
-- Debajo, el texto: **"P.A.L.M.A. — Sistema en vivo"** y la URL escrita
+- Debajo, el texto: **"Pulso — Sistema en vivo"** y la URL escrita
 
 Pruebalo con TU PROPIO movil antes de imprimir.
 

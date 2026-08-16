@@ -1,4 +1,4 @@
-# P.A.L.M.A.
+# Pulso
 
 **Plataforma Analítica del Litoral, Montes y Andes**
 Sistema de Alerta Temprana ante El Niño Costero — Región Piura, Perú
@@ -83,7 +83,7 @@ Ambos contradicen la hipótesis inicial del proyecto, y se reportan igual:
 
 ## Relación con ENFEN
 
-P.A.L.M.A. **no compite con el ENFEN ni pretende adelantarse a él.** El ENFEN
+Pulso **no compite con el ENFEN ni pretende adelantarse a él.** El ENFEN
 opera un sistema de alerta propio y mantiene el estado de "Alerta de El Niño
 Costero" desde marzo de 2026. Nuestro sistema detectó ese mismo episodio el
 1 de marzo de 2026, de forma independiente: **coincidimos con la autoridad
@@ -97,7 +97,7 @@ El aporte está en la Etapa 2 — la capa que hoy no existe.
 
 ```bash
 pip install -r requirements.txt
-streamlit run app_palma.py
+streamlit run app_pulso.py
 ```
 
 Las series ya están descargadas en `datos/`. Para reconstruirlas desde cero:
@@ -126,5 +126,4 @@ de las cinco pestañas siguen operativas**: leen de los CSV locales.
 
 ---
 
-Proyecto desarrollado para la **Feria de Ingeniería de Sistemas e Informática —
-ODS e Innovación**, UTP Piura 2026.
+Proyecto desarrollado para la **Datatón ODS e Innovación**, UTP Piura 2026.

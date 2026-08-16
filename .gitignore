@@ -1,16 +1,51 @@
-# Python
+# ============================================================
+# PULSO — .gitignore
+#
+# CAMBIO IMPORTANTE respecto a la version anterior:
+#
+# Antes habia una linea `*.json` bajo el comentario "Credenciales".
+# La intencion era buena, la regla era ciega: tambien excluia
+# indice.json y alertas.json, que SI deben versionarse.
+#
+# Consecuencia real: el workflow generaba y subia los nueve PNG, pero
+# el indice que los describe nunca llegaba al repositorio. El backend
+# devolvia {} y la pestaña de monitoreo aparecia vacia con los mapas
+# intactos en disco. Un fallo mudo.
+#
+# Regla general: excluir credenciales POR NOMBRE, nunca por extension.
+# ============================================================
+
+# --- Python ---
 __pycache__/
 *.pyc
 *.pyo
 
-# Entorno virtual
+# --- Entornos virtuales ---
 venv/
 .venv/
 
-# Credenciales (NUNCA subir)
-*.json
+# --- Credenciales (NUNCA subir) ---
+# Por nombre, no por extension.
+*service_account*.json
+*service-account*.json
+*credentials*.json
+gee-key.json
 .env
-secrets.toml.\venv\Scripts\activate
+.env.local
+secrets.toml
 
-# archivo/
+# --- Node / SvelteKit ---
+node_modules/
+frontend/.svelte-kit/
+frontend/build/
+frontend/.env
+frontend/.env.local
+
+# --- Datos generados que SI se versionan ---
+# El workflow diario commitea estos archivos; si estuvieran ignorados,
+# `git add` no haria nada y el cron figuraria en verde sin publicar nada.
+!backend/data/salidas/mapas/indice.json
+!backend/data/alertas.json
+
+# --- Scratch ---
 archivo/

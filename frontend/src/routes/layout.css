@@ -1,0 +1,8 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@theme {
+  --font-sans: 'Rethink Sans', sans-serif;
+  --font-oswald: 'Oswald', sans-serif;
+  --font-slab: 'Roboto Slab', serif;
+}
