@@ -1,13 +1,11 @@
 {
   "LITORAL__actual_2026": {
     "archivo": "LITORAL__actual_2026.png",
-    "kpi": 22.65,
+    "kpi": 22.63,
     "banda": "sst",
-    "desde": "2026-07-17",
-    "hasta": "2026-08-15",
-    "generado": "2026-08-16",
-    "error_ultimo_intento": "Permission 'earthengine.thumbnails.create' denied on resource 'projects/monitor-bosqueseco' (or it may not exist).",
-    "ultimo_intento": "2026-08-16"
+    "desde": "2026-07-18",
+    "hasta": "2026-08-16",
+    "generado": "2026-08-17"
   },
   "LITORAL__nino_2017": {
     "archivo": "LITORAL__nino_2017.png",
@@ -15,9 +13,7 @@
     "banda": "sst",
     "desde": "2017-01-01",
     "hasta": "2017-05-31",
-    "generado": "2026-08-16",
-    "error_ultimo_intento": "Permission 'earthengine.thumbnails.create' denied on resource 'projects/monitor-bosqueseco' (or it may not exist).",
-    "ultimo_intento": "2026-08-16"
+    "generado": "2026-08-17"
   },
   "LITORAL__nino_2015_16": {
     "archivo": "LITORAL__nino_2015_16.png",
@@ -25,19 +21,15 @@
     "banda": "sst",
     "desde": "2015-10-01",
     "hasta": "2016-03-31",
-    "generado": "2026-08-16",
-    "error_ultimo_intento": "Permission 'earthengine.thumbnails.create' denied on resource 'projects/monitor-bosqueseco' (or it may not exist).",
-    "ultimo_intento": "2026-08-16"
+    "generado": "2026-08-17"
   },
   "MONTES__actual_2026": {
     "archivo": "MONTES__actual_2026.png",
     "kpi": 0.193,
     "banda": "MSAVI",
-    "desde": "2026-05-18",
-    "hasta": "2026-08-15",
-    "generado": "2026-08-16",
-    "error_ultimo_intento": "Permission 'earthengine.thumbnails.create' denied on resource 'projects/monitor-bosqueseco' (or it may not exist).",
-    "ultimo_intento": "2026-08-16"
+    "desde": "2026-05-19",
+    "hasta": "2026-08-16",
+    "generado": "2026-08-17"
   },
   "MONTES__nino_2017": {
     "archivo": "MONTES__nino_2017.png",
@@ -45,9 +37,7 @@
     "banda": "MSAVI",
     "desde": "2017-01-01",
     "hasta": "2017-05-31",
-    "generado": "2026-08-16",
-    "error_ultimo_intento": "Permission 'earthengine.thumbnails.create' denied on resource 'projects/monitor-bosqueseco' (or it may not exist).",
-    "ultimo_intento": "2026-08-16"
+    "generado": "2026-08-17"
   },
   "MONTES__nino_2015_16": {
     "archivo": "MONTES__nino_2015_16.png",
@@ -55,19 +45,15 @@
     "banda": "MSAVI",
     "desde": "2015-10-01",
     "hasta": "2016-03-31",
-    "generado": "2026-08-16",
-    "error_ultimo_intento": "Permission 'earthengine.thumbnails.create' denied on resource 'projects/monitor-bosqueseco' (or it may not exist).",
-    "ultimo_intento": "2026-08-16"
+    "generado": "2026-08-17"
   },
   "ANDES__actual_2026": {
     "archivo": "ANDES__actual_2026.png",
     "kpi": 0.095,
     "banda": "NDMI",
-    "desde": "2026-05-18",
-    "hasta": "2026-08-15",
-    "generado": "2026-08-16",
-    "error_ultimo_intento": "Permission 'earthengine.thumbnails.create' denied on resource 'projects/monitor-bosqueseco' (or it may not exist).",
-    "ultimo_intento": "2026-08-16"
+    "desde": "2026-05-19",
+    "hasta": "2026-08-16",
+    "generado": "2026-08-17"
   },
   "ANDES__nino_2017": {
     "archivo": "ANDES__nino_2017.png",
@@ -75,9 +61,7 @@
     "banda": "NDMI",
     "desde": "2017-01-01",
     "hasta": "2017-05-31",
-    "generado": "2026-08-16",
-    "error_ultimo_intento": "Permission 'earthengine.thumbnails.create' denied on resource 'projects/monitor-bosqueseco' (or it may not exist).",
-    "ultimo_intento": "2026-08-16"
+    "generado": "2026-08-17"
   },
   "ANDES__nino_2015_16": {
     "archivo": "ANDES__nino_2015_16.png",
@@ -85,8 +69,6 @@
     "banda": "NDMI",
     "desde": "2015-10-01",
     "hasta": "2016-03-31",
-    "generado": "2026-08-16",
-    "error_ultimo_intento": "Permission 'earthengine.thumbnails.create' denied on resource 'projects/monitor-bosqueseco' (or it may not exist).",
-    "ultimo_intento": "2026-08-16"
+    "generado": "2026-08-17"
   }
 }
