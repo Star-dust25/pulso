@@ -10,6 +10,10 @@ from core.core_alerta import (
 router = APIRouter()
 
 # Cache de 30 min para la serie diaria, 1 h para la vegetacion mensual.
+#
+# OJO EN DEMOS: si regeneras los CSV con el servidor encendido, la web
+# sigue mostrando lo viejo hasta media hora despues, SIN avisar. Reinicia
+# uvicorn tras cualquier actualizacion de datos.
 cache_alerta = TTLCache(maxsize=1, ttl=1800)
 cache_msavi = TTLCache(maxsize=1, ttl=3600)
 
@@ -25,16 +29,29 @@ VENTANA_GRAFICO_DIAS = 420
 @cached(cache_alerta)
 def get_alerta_data():
     """
-    Serie diaria + episodios.
+    Serie diaria + episodios, leidos del CSV historico.
 
-    TODO PENDIENTE: aqui va la fusion con el dato vivo de OISST via
-    core_vivo.fusionar(). Mientras no este, el sistema opera solo con el
-    CSV historico y LO DECLARA en el campo 'motivo'. Un sistema de alerta
-    que sirve datos congelados sin decirlo es peor que uno caido.
+    POR QUE 'en_vivo' ES SIEMPRE False
+    ----------------------------------
+    core_vivo.fusionar() esta escrito y probado, pero NO esta conectado.
+    Es una decision, no un olvido: preferimos servir un dato de fecha
+    conocida a depender de una llamada externa que puede caerse en mitad
+    de una demostracion.
+
+    El CSV lo actualiza scripts/construir_serie_diaria.py, y el campo
+    'ultimo_dato' dice hasta cuando llega. Un sistema de alerta que sirve
+    datos congelados sin decirlo es peor que uno caido; por eso la fecha
+    viaja en la respuesta.
+
+    NOTA: el mensaje anterior decia "Earth Engine no conectado". Era falso:
+    Earth Engine funciona —los scripts de descarga lo usan sin problema—.
+    Lo que no existe es la fusion en vivo dentro de la API.
     """
     historico = cargar_diario()
     en_vivo = False
-    motivo = "Earth Engine no conectado: operando solo con el CSV historico."
+    motivo = ("Fusion en vivo no implementada: la API sirve el CSV "
+              "historico, actualizado por scripts/construir_serie_diaria.py. "
+              "Ver el campo 'ultimo_dato' para saber hasta cuando llega.")
 
     df = anomalia_diaria(historico)
     df, episodios = emitir_episodios(df)
@@ -88,6 +105,12 @@ def get_estado():
         "umbral_precursor": float(UMBRAL_PRECURSOR),
         "umbral_msavi": float(UMBRAL_MSAVI),
         "fecha_precursor": ultimo.name.strftime('%d-%b-%Y'),
+        # El compuesto MSAVI del mes EN CURSO se calcula con las escenas
+        # que haya hasta la fecha, asi que a mitad de mes es parcial. No se
+        # filtra (a diferencia de core_icen.py, que si descarta los meses
+        # con menos de 25 dias de OISST): la Etapa 2 se lee como tendencia
+        # mensual, no como un valor cerrado. Conviene saberlo si el mes que
+        # aparece aqui es el actual.
         "fecha_msavi": mes_z.strftime('%b-%Y'),
         # La frescura del dato es parte del diagnostico, no un detalle
         # tecnico. El frontend debe mostrarla cuando en_vivo es False.

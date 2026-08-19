@@ -21,18 +21,35 @@
 # EL HALLAZGO QUE SOSTIENE TODO EL PROYECTO
 #
 #   El Niño 2015-16 fue MAS FUERTE en el mar que el de 2017.
-#   Y no paso nada.
+#   Y su peor mes de daño fue 12 VECES MENOR.
 #
-#                    pico SST    z(MSAVI)     resultado
-#   2015-16          +2.51 C       1.36       sin desastre
-#   2017             +2.03 C       3.34       CATASTROFE
+#   OJO: el episodio de 2015-16 abarca DOS temporadas de lluvias, y el
+#   registro SINPAD las separa:
 #
-#   El oceano se equivoco. El territorio acerto.
+#     mar-2015   5,788 damnificados  -> ANTES de que la Etapa 1 alertara
+#                                       (17-abr-2015). Queda fuera de la
+#                                       ventana del episodio: es un evento
+#                                       NO ANTICIPADO que la matriz no
+#                                       contabiliza. Se declara aparte.
+#     mar-2016   3,214 damnificados  -> dentro de la ventana. Es el valor
+#                                       que usa la matriz de confusion.
+#
+#                    pico SST    z(MSAVI)   peor mes   veredicto SINPAD
+#   2015-16          +2.51 C       1.37        5,788   DESASTRE MENOR
+#   2017             +2.03 C       3.35       72,965   DESASTRE MAYOR
+#
+#   El oceano midio mal la magnitud. El territorio la midio bien.
 #
 # Un sistema basado solo en la anomalia oceanica habria gritado MAS FUERTE
-# en 2015 (cuando no paso nada) que en 2017 (cuando el rio se llevo Piura).
+# en 2015 (daño menor) que en 2017 (cuando el rio se llevo Piura).
 #
 #   EL MAR DICE "VIENE". EL BOSQUE SECO CONFIRMA "ESTA AQUI".
+#
+# OJO CON LA FORMULACION: NO decimos "en 2015 no paso nada". Si paso: el
+# registro SINPAD del INDECI documenta miles de damnificados en Piura. Lo
+# que cambia entre ambos años es la ESCALA del daño, y esa escala la
+# anticipa el bosque seco, no el oceano. Afirmar "sin desastre" para 2015
+# seria contradecir al registro oficial del Estado.
 #
 # ============================================================
 # CORRECCIONES DE LA v3 (todas son honestidad, no cosmetica)
@@ -44,10 +61,12 @@
 #
 # 2. LA n REAL DE LA ETAPA 2. Landsat 8 arranca en 2013, asi que 1983 y
 #    1998 NO tienen Etapa 2. Nuestro aporte original solo se probo sobre
-#    DOS eventos: 2017 y 2023. Es n=2, no n=4. Lo decimos.
+#    DOS eventos: 2015 y 2017. Es n=2, no n=5. Lo decimos.
 #
 # 3. YAKU NO DIO ANTICIPACION EN ETAPA 2. Confirmo en abril; el desastre
 #    fue el 15 de marzo. Confirmo DESPUES. Se reporta como tal.
+#
+# 4. EL VEREDICTO LO PONE EL INDECI, NO NOSOTROS. Ver core_impacto.py.
 # ============================================================
 
 import os
@@ -66,7 +85,9 @@ CLIM_INICIO, CLIM_FIN = 1991, 2020
 
 # --- ETAPA 1: precursor oceanico ---
 VENTANA_PERSISTENCIA = 30      # dias de media movil
-UMBRAL_PRECURSOR = 0.4         # C - mismo umbral conceptual que el ICEN
+UMBRAL_PRECURSOR = 0.4         # C - parametro operativo de Pulso sobre la
+                               # anomalia DIARIA. NO es el criterio del ICEN,
+                               # que opera sobre la media movil mensual.
 DIAS_CONFIRMACION = 15         # dias seguidos sobre umbral para emitir
 UMBRAL_MAGNITUD = 2.0          # C - pico minimo para escalar a Etapa 2
 
@@ -106,7 +127,9 @@ def anomalia_diaria(df):
     base = df.loc[str(CLIM_INICIO):str(CLIM_FIN)]
     clim = base.groupby('doy')['sst_nino12'].mean()
 
-    # Suavizado circular: diciembre y enero deben empulsor
+    # Suavizado circular: se triplica la serie para que diciembre y enero
+    # empalmen. Sin esto, la media movil de 31 dias se queda sin datos en
+    # los extremos del anio y produce un escalon artificial el 1 de enero.
     triple = pd.concat([clim, clim, clim])
     suave = triple.rolling(31, center=True, min_periods=1).mean()
     clim_suave = suave.iloc[len(clim):2 * len(clim)]
@@ -147,6 +170,15 @@ def emitir_episodios(df):
 # ------------------------------------------------------------
 
 def serie_msavi():
+    """
+    z(MSAVI) del bosque seco, mes a mes.
+
+    NOTA: la climatologia y la desviacion estandar se calculan sobre TODA
+    la serie disponible, asi que anadir meses nuevos mueve ligeramente los
+    z historicos. Es una climatologia movil, no un error, pero implica que
+    las cifras citadas fuera del codigo deben releerse tras cada
+    actualizacion de datos.
+    """
     v = pd.read_csv(CSV_VEG)
     v['fecha'] = pd.to_datetime(dict(year=v.anio, month=v.mes, day=1))
     v = v.sort_values('fecha').set_index('fecha')
@@ -190,14 +222,14 @@ def evaluar_episodio(df, veg, inicio, fin, tope=None):
     # Antes: 'desastre' salia de un diccionario de cuatro fechas escritas a
     # mano. Ahora sale del registro de emergencias del INDECI (SINPAD).
     # El cambio no es cosmetico: con el diccionario, 2015 figuraba como
-    # "sin desastre" cuando el Estado registra 5,788 damnificados en Piura
-    # en marzo de ese año.
+    # "sin desastre" cuando el Estado si registra damnificados en Piura
+    # durante ese episodio.
     sinpad = _sinpad()
     ultimo_dato = df.index[-1]
     # 'tope' = inicio del episodio siguiente. Sin el, el margen de dos
     # meses invade el episodio que viene detras y le roba su daño: el
     # episodio de sep-2016 (pico +0.61 C, oceano casi neutro) se acreditaba
-    # los 9,016 damnificados de enero de 2017, que son del Niño costero.
+    # los damnificados de enero de 2017, que son del Niño costero.
     veredicto, detalle = impacto.veredicto(sinpad, inicio, fin, ultimo_dato,
                                            tope=tope)
 
@@ -255,14 +287,19 @@ def graficar(df, veg):
 
     # ===== LAMINA CENTRAL: 2015-16 vs 2017 =====
     # Ventanas IGUALADAS a 15 meses para que la comparacion sea justa.
+    #
+    # ATENCION: los picos y las cifras de damnificados de los rotulos estan
+    # ESCRITOS A MANO. Si se regeneran las series hay que releerlos de la
+    # salida de main() y actualizarlos aqui, o el grafico dira una cosa y
+    # el terminal otra.
     fig, ejes = plt.subplots(2, 2, figsize=(15, 8), sharey='row')
 
     casos = [
         ('2015-02', '2016-05', 'EL NIÑO 2015-16 ("Godzilla")',
-         'Mar MAS caliente: pico +2.51 °C  →  SIN desastre',
-         None, 'EL AGUA NUNCA ATERRIZO'),
+         'Mar MAS caliente: pico +2.51 °C  →  peor mes 5,788 damnificados',
+         None, 'DAÑO MENOR'),
         ('2016-07', '2017-10', 'NIÑO COSTERO 2017',
-         'Mar MENOS caliente: pico +2.03 °C  →  CATASTROFE',
+         'Mar MENOS caliente: pico +2.03 °C  →  peor mes 72,965 damnificados',
          DESASTRES['Niño costero 2017'], 'EL BOSQUE CONFIRMA'),
     ]
 
@@ -317,7 +354,8 @@ def graficar(df, veg):
         ax.grid(alpha=0.2)
 
     fig.suptitle('POR QUE LA ANOMALIA OCEANICA NO BASTA\n'
-                 'El oceano grito mas fuerte en 2015. El territorio acerto en 2017.',
+                 'El mar grito mas fuerte en 2015 y su peor mes de daño fue '
+                 '12 veces menor (registro SINPAD - INDECI).',
                  fontsize=13.5, fontweight='bold', x=0.01, ha='left')
     fig.tight_layout(rect=[0, 0, 1, 0.93])
     fig.savefig(os.path.join(CARPETA_SALIDA, '5_dos_etapas_2015_vs_2017.png'),
@@ -353,13 +391,14 @@ def graficar(df, veg):
     ultimo = df.dropna(subset=['precursor']).iloc[-1]
     zs = veg['z_msavi'].dropna()
     z_act = zs.iloc[-1]
+    mes_act = zs.index[-1]
     e1 = 'EN ALERTA' if ultimo['etapa1'] else 'vigilancia'
     e2 = 'CONFIRMA' if z_act >= UMBRAL_MSAVI else 'NO confirma'
 
     fig.suptitle(
         f'ESTADO ACTUAL — {ultimo.name:%d-%b-%Y}   [EPISODIO EN CURSO]\n'
         f'ETAPA 1: {e1} (precursor {ultimo["precursor"]:+.2f} °C)   |   '
-        f'ETAPA 2: {e2} (z = {z_act:+.2f})',
+        f'ETAPA 2: {e2} (z = {z_act:+.2f}, {mes_act:%b-%Y})',
         fontsize=12, fontweight='bold', x=0.01, ha='left')
     fig.tight_layout(rect=[0, 0, 1, 0.91])
     fig.savefig(os.path.join(CARPETA_SALIDA, '6_estado_actual.png'), dpi=160)
@@ -367,6 +406,8 @@ def graficar(df, veg):
 
     print(f'\nGraficos: {CARPETA_SALIDA}/5_dos_etapas_2015_vs_2017.png')
     print(f'          {CARPETA_SALIDA}/6_estado_actual.png')
+    print('  RECUERDA: si la web los muestra, copialos tambien a '
+          'data/salidas/mapas/')
 
 
 # ------------------------------------------------------------
@@ -515,15 +556,17 @@ def main():
              if r['desastre'] and r['tiene_etapa2']
              and not np.isnan(r['z_msavi'])]
     if zs_no and zs_si:
-        print('3. EL UMBRAL z=1.5 NO SEPARA LIMPIAMENTE. Antes lo afirmabamos,')
-        print('   y era un artefacto de definir "desastre" a mano.')
+        print('3. EL MARGEN DEL UMBRAL z=1.5 ES ESTRECHO.')
         print(f'   z(MSAVI) maximo SIN daño registrado : {max(zs_no):.2f}')
         print(f'   z(MSAVI) minimo CON daño registrado : {min(zs_si):.2f}')
         if min(zs_si) <= max(zs_no):
             print('   -> HAY SOLAPE. Contra el registro oficial del INDECI, el')
             print('      umbral no distingue perfectamente. Lo declaramos.\n')
         else:
-            print('   -> sin solape.\n')
+            print('   -> Sin solape, pero la separacion es de apenas '
+                  f'{min(zs_si) - max(zs_no):.2f} desviaciones sobre n=2 '
+                  'eventos.')
+            print('      No es una frontera robusta: es lo que dan los datos.\n')
 
     perdidos = [r for r in cerrados if r['desastre'] and not r['alerta_roja']]
     if perdidos:
@@ -531,8 +574,10 @@ def main():
         for r in perdidos:
             dam = ('—' if r['damnificados'] is None
                    else f'{int(r["damnificados"]):,} damnificados')
+            z_txt = ('sin dato Landsat' if np.isnan(r['z_msavi'])
+                     else f'z(MSAVI) {r["z_msavi"]:+.2f}')
             print(f'   {r["inicio"]:%b-%Y}  pico {r["pico"]:+.2f} C  '
-                  f'z(MSAVI) {r["z_msavi"]:+.2f}  ({dam})')
+                  f'{z_txt}  ({dam})')
         print('   La precision del 100% se paga con eventos NO detectados.')
         print('   Un sistema de alerta debe declarar sus dos errores, no uno.')
 

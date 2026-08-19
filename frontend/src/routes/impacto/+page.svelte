@@ -84,10 +84,10 @@
             <div
               class="text-3xl font-oswald font-bold text-slate-800 mb-2 pl-2"
             >
-              r = 0.512
+              r = 0.499
             </div>
             <div class="text-[13px] text-slate-500 pl-2 leading-relaxed">
-              lag +1 mes · n=160 · p &lt; 0.0001
+              lag +1 mes · n = 162 · Bonferroni sobre 13 desfases
             </div>
           </div>
         </div>
@@ -114,7 +114,12 @@
           <p class="text-slate-600 text-[15px] mb-4 leading-relaxed">
             El desfase de un mes entre la señal oceánica y la respuesta del
             bosque seco no se asumió: se obtuvo probando trece desfases
-            distintos y conservando el que arrojó la relación más fuerte.
+            distintos y conservando el que arrojó la relación más fuerte. Probar
+            trece hipótesis infla la probabilidad de encontrar una significativa
+            por azar, así que aplicamos la corrección de Bonferroni: el umbral
+            real de significancia es p &lt; 0.0038, no 0.05. Ambas series se
+            desestacionalizaron antes de correlacionarlas, para que el ciclo
+            anual compartido no fabricara un desfase que no existe.
           </p>
           <p class="text-slate-600 text-[15px] mb-4 leading-relaxed">
             El páramo andino, en cambio, no muestra acoplamiento con la anomalía
@@ -123,14 +128,33 @@
             su humedad, saturada durante buena parte del año, lo haga funcionar
             como regulador y no como receptor de la señal de El Niño.
           </p>
+          <p class="text-slate-600 text-[15px] mb-4 leading-relaxed">
+            Que ese control salga nulo es precisamente lo que da valor al
+            resultado del bosque seco. Si todas las series correlacionaran entre
+            sí, la señal sería ruido: el contraste entre una respuesta fuerte y
+            una respuesta plana es lo que permite atribuirla al mecanismo y no a
+            una tendencia común.
+          </p>
         </div>
 
         <div class="mt-8 text-[12px] text-slate-400 leading-relaxed max-w-4xl">
-          Nota metodológica: el ENFEN calcula el ICEN oficial con ERSSTv5. Pulso
-          lo reconstruye con OISST v2.1, de resolución diaria. Se trata por
-          tanto de una reconstrucción independiente, no de una réplica del
-          índice oficial; la correlación reportada mide precisamente cuánto se
-          aproxima una a la otra.
+          <p class="mb-3">
+            Nota metodológica: el ENFEN calcula el ICEN oficial con ERSSTv5 y
+            climatologías escalonadas cada cinco años; Pulso lo reconstruye con
+            OISST v2.1 y una sola climatología 1991-2020. Se trata por tanto de
+            una reconstrucción independiente, no de una réplica del índice
+            oficial; la correlación reportada mide precisamente cuánto se
+            aproxima una a la otra. El sesgo entre ambas series deriva con el
+            tiempo y cambia de signo, por lo que se recalcula sobre la ventana
+            reciente y se resta antes de publicar cualquier valor.
+          </p>
+          <p>
+            Los valores p del acoplamiento asumen observaciones independientes.
+            Las series mensuales están autocorrelacionadas, así que el número
+            efectivo de observaciones es menor que n = 162 y esos valores están
+            subestimados. Lo defendible es el coeficiente, la forma del
+            correlograma y el contraste con el control.
+          </p>
         </div>
       </div>
     </DashboardContainer>

@@ -51,7 +51,8 @@
           >Sistema de Alerta Temprana ante El Niño Costero.</strong
         >
         Detección en dos etapas: anomalía térmica del litoral y respuesta del bosque
-        seco, sobre datos satelitales de NOAA, USGS y MINAM.
+        seco, sobre datos satelitales de NOAA y USGS y la cartografía de ecosistemas
+        del Gobierno Regional de Piura.
       </p>
     </div>
   </header>
@@ -146,10 +147,16 @@
     >
       <div class="flex flex-col md:flex-row justify-between gap-8 py-2">
         <!-- Threshold 1: Precursor Oceánico -->
+        <!--
+          maxVal=5.0, no 4.0. En agosto de 2026 el precursor llego a +3.84 °C
+          con anomalias diarias por encima de +4.2: con el techo en 4.0 la
+          barra se satura y parece averiada justo cuando el episodio es mas
+          intenso. El rango es solo escala visual, no afecta a ningun calculo.
+        -->
         <ThresholdBar
           valor={data.precursor}
           minVal={-1.0}
-          maxVal={4.0}
+          maxVal={5.0}
           umbral={data.umbral_precursor}
           titulo="1. Precursor Oceánico"
           valorTexto="{data.precursor > 0 ? '+' : ''}{data.precursor.toFixed(
@@ -166,10 +173,14 @@
         <div class="hidden md:block w-px bg-slate-100 self-stretch my-4"></div>
 
         <!-- Threshold 2: Confirmación Territorial -->
+        <!--
+          maxVal=4.0 para que quepan los valores historicos: 2017 llego a 3.35
+          y 2023 a 3.69. Con el techo en 3.5 el segundo se saldria de escala.
+        -->
         <ThresholdBar
           valor={data.z_msavi}
           minVal={-1.5}
-          maxVal={3.5}
+          maxVal={4.0}
           umbral={data.umbral_msavi}
           titulo="2. Confirmación Territorial"
           valorTexto="{data.z_msavi > 0 ? '+' : ''}{data.z_msavi.toFixed(2)} σ"

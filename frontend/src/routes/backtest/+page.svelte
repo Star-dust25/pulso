@@ -86,7 +86,7 @@
               +26 días
             </div>
             <div class="text-[13px] text-slate-500 pl-2 leading-relaxed">
-              Etapa 2 · compuesto de feb-2017, disponible el 1-marzo.
+              Etapa 2 · compuesto de feb-2017 (z = 3.17), disponible el 1-marzo.
             </div>
           </div>
         </div>
@@ -134,13 +134,17 @@
           <p class="text-slate-600 text-[15px] mb-8 leading-relaxed">
             El Niño de 2015-16 calentó <strong
               class="text-slate-800 font-semibold">MÁS</strong
-            > el mar que el de 2017, y aun así el daño fue mucho menor: el registro
-            SINPAD documenta 3,214 damnificados en 2015 frente a 72,965 en 2017.
-            El ICEN oficial clasificó a 2015-16 como FUERTE (2.23, pico de octubre
-            2015), mientras que a 2017 lo clasificó como MODERADO (1.31, pico de
-            marzo 2017 — apenas una centésima sobre el umbral de 1.30). El contraste
-            es de magnitud, no de ocurrencia. Ningún indicador puramente oceánico
-            anticipa esa diferencia de escala. La confirmación territorial, sí.
+            > el mar que el de 2017 (+2.51 °C frente a +2.03 °C), y aun así el daño
+            fue mucho menor. El registro SINPAD del INDECI documenta dos temporadas
+            de daño moderado durante ese episodio: 5,788 damnificados en marzo de
+            2015 y 3,214 en marzo de 2016. El Niño costero de 2017, con el mar más
+            frío, produjo 72,965 damnificados en un solo mes — más de doce veces
+            el peor mes de 2015-16. El ICEN oficial clasificó a 2015-16 como FUERTE
+            (2.23, pico de octubre 2015), mientras que a 2017 lo clasificó como MODERADO
+            (1.31, pico de marzo 2017 — apenas una centésima sobre el umbral de 1.30).
+            El contraste es de magnitud, no de ocurrencia. Ningún indicador puramente
+            oceánico anticipa esa diferencia de escala. La confirmación territorial,
+            sí.
           </p>
         </div>
 
@@ -160,14 +164,26 @@
 
         <!-- Footer Note -->
         <div class="mt-8 text-[12px] text-slate-400 leading-relaxed">
-          La Etapa 2 solo alcanza a los eventos posteriores a 2013, cuando
-          Landsat 8 inicia operaciones: 1983 y 1998 quedan fuera de su alcance,
-          y 2023 quedó excluido de la matriz por cobertura incompleta del
-          registro SINPAD. Lo declaramos abiertamente: esto es una prueba de
-          concepto, no una validación estadística robusta aún. Lo defendible es
-          el gradiente — los episodios sin daño registrado no pasan de z = 1.09;
-          el desastre menor de 2015 llegó a 1.36; y los desastres mayores están
-          en 3.34 (2017) y 3.67 (2023). A más señal, más daño.
+          <p class="mb-3">
+            La Etapa 2 solo alcanza a los eventos posteriores a 2013, cuando
+            Landsat 8 inicia operaciones: 1983 y 1998 quedan fuera de su
+            alcance, y 2023 quedó excluido de la matriz por cobertura incompleta
+            del registro SINPAD. Lo declaramos abiertamente: esto es una prueba
+            de concepto, no una validación estadística robusta aún. Lo
+            defendible es el gradiente — los episodios sin daño registrado no
+            pasan de z = 1.10; el episodio de 2015-16 llegó a 1.37; y los
+            desastres mayores están en 3.35 (2017) y 3.69 (2023). A más señal,
+            más daño.
+          </p>
+          <p>
+            <span class="font-semibold text-slate-500"
+              >Limitación adicional que declaramos:</span
+            > el episodio oceánico de 2015-16 abarca dos temporadas de lluvias. La
+            Etapa 1 emitió alerta el 17 de abril de 2015, después del pico de daño
+            de marzo de ese año (5,788 damnificados). Ese daño quedó fuera de la
+            ventana del episodio y, por tanto, fuera de la matriz de confusión. Es
+            un evento no anticipado que no aparece contabilizado como tal.
+          </p>
         </div>
       </div>
     </DashboardContainer>

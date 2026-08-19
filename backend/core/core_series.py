@@ -6,13 +6,32 @@
 # mensual de los tres ecosistemas. NO grafica, NO decide, NO opina.
 #
 # Correcciones respecto al codigo anterior:
-#   1. SST de OISST (diario, desde 1981) en lugar de Landsat (16 dias, 2013+).
-#      Esto habilita el backtest de 1997/2017/2023.
+#   1. SST de OISST (diario, desde sep-1981) en lugar de Landsat (16 dias,
+#      2013+). Esto habilita el backtest de 1982/1997/2017/2023.
 #   2. Landsat COLECCION 2 NIVEL 2 (reflectancia de superficie) en lugar de TOA.
 #      Sin esto los indices no son comparables entre fechas.
 #   3. Mascara de nubes real con QA_PIXEL (antes: ninguna).
 #   4. NDMI (NIR-SWIR) para humedad del paramo, en lugar de NDWI de McFeeters
 #      que solo detecta cuerpos de agua abiertos.
+#
+# ------------------------------------------------------------
+# DOS DEFINICIONES DE ANOMALIA CONVIVEN EN EL PROYECTO
+#
+# Este modulo guarda 'anom_nino12' y 'anom_piura' leyendo la banda 'anom'
+# de OISST, que trae la climatologia de referencia de la propia NOAA.
+#
+# core_icen.py NO usa esa banda: calcula su anomalia desde 'sst_nino12'
+# contra la climatologia 1991-2020, que es la que exige el ICEN.
+#
+# Las dos son correctas para lo suyo, pero NO son el mismo numero:
+#   - core_lag.py usa la de OISST. Para correlaciones da igual, porque un
+#     desplazamiento constante no altera el coeficiente y ademas se
+#     desestacionaliza antes.
+#   - core_icen.py usa la propia, porque ahi el valor absoluto SI importa:
+#     se compara contra umbrales de categoria.
+#
+# Si alguien pregunta por que dos modulos dan "la anomalia" distinta, la
+# respuesta es esta. No es un error, es una base climatologica distinta.
 # ============================================================
 
 import ee
@@ -33,6 +52,10 @@ def enmascarar_nubes(imagen):
     """
     Mascara de nubes usando la banda QA_PIXEL de Landsat Coleccion 2.
     Bits: 1 = nube dilatada, 2 = cirro, 3 = nube, 4 = sombra de nube.
+
+    Enmascara PIXELES, no escenas. Una imagen con el 95% de nubes sigue
+    formando parte de la coleccion: simplemente aporta muy pocos pixeles
+    validos. Ver la nota de serie_vegetacion_anual() sobre 'n_escenas'.
     """
     qa = imagen.select('QA_PIXEL')
     mascara = (
@@ -54,6 +77,9 @@ def anadir_indices(imagen):
     """
     NDMI: humedad de la vegetacion/suelo    (NIR - SWIR1) / (NIR + SWIR1)
     MSAVI: vigor vegetal robusto a suelo desnudo (clave en bosque seco)
+
+    El orden importa: enmascarar_nubes() y escalar_reflectancia() deben
+    haberse aplicado antes, o los indices salen de enteros crudos.
     """
     ndmi = imagen.normalizedDifference(['SR_B5', 'SR_B6']).rename('NDMI')
 
@@ -86,6 +112,11 @@ def geometria_ecosistema(ruta_asset, campo, valores, tolerancia=500):
     """
     Devuelve la geometria disuelta de una lista de clases de ECO_REGION.
     Simplifica para que reduceRegion no colapse por exceso de vertices.
+
+    OJO: los nombres de 'valores' deben coincidir EXACTAMENTE con los del
+    asset, tildes incluidas. Un nombre mal escrito no lanza error: devuelve
+    una geometria vacia y toda la serie sale nula. Por eso construir_series.py
+    imprime el area como chequeo de cordura.
     """
     fc = ee.FeatureCollection(ruta_asset).filter(
         ee.Filter.inList(campo, ee.List(valores))
@@ -108,6 +139,15 @@ def serie_sst_anual(anio, region_nino12, region_local, escala=25000):
     Media mensual de SST y de su ANOMALIA sobre dos regiones:
       - Nino 1+2 (referencia oficial, base del ICEN de ENFEN)
       - caja local frente a Piura (senal costera)
+
+    La columna 'anom' viene de la banda homonima de OISST, con la
+    climatologia de la NOAA. NO es la anomalia 1991-2020 que usa
+    core_icen.py. Ver la nota del encabezado.
+
+    'n_dias_sst' es el numero de imagenes OISST del mes. Como OISST es
+    diario y de cobertura global, aqui SI equivale a dias con dato: es un
+    indicador de completitud fiable, y core_icen.py lo usa para descartar
+    los meses en curso (DIAS_MINIMOS_MES).
 
     Devuelve un ee.FeatureCollection de 12 features (uno por mes).
     """
@@ -163,6 +203,27 @@ def serie_vegetacion_anual(anio, geom_andes, geom_montes,
     Media mensual de NDMI (paramo+bofedal) y MSAVI (bosque seco costero).
     Si un mes no tiene escenas utiles tras la mascara de nubes, devuelve null:
     eso es informacion honesta, no un cero inventado.
+
+    QUE ES 'n_escenas', Y QUE NO ES
+    -------------------------------
+    Es el numero de escenas Landsat que INTERSECTAN la union de ambas
+    geometrias en ese mes. NO es un indicador de calidad del dato, por dos
+    razones:
+
+      1. Se cuenta ANTES de que la mascara de nubes elimine pixeles. Una
+         escena con 95% de nubes suma 1 igual que una despejada.
+      2. Es del area UNIDA (Andes + Montes), no de cada ecosistema por
+         separado. Un mes puede tener 6 escenas todas sobre el bosque seco
+         y ninguna util sobre el paramo: 'n_escenas' dira 6 para los dos.
+
+    Sirve para saber si el mes esta VACIO (n=0 -> null garantizado), no
+    para juzgar si esta bien cubierto. No filtrar por este campo creyendo
+    que mide cobertura: no la mide.
+
+    Tampoco hay un minimo de pixeles validos por region. El compuesto usa
+    median() sobre lo que sobreviva a la mascara, asi que un mes con pocas
+    escenas despejadas produce un valor calculado sobre menos pixeles, sin
+    que nada lo señale. Es una limitacion conocida, no corregida.
     """
     meses = ee.List.sequence(1, 12)
     region_total = geom_andes.union(geom_montes, 1000)

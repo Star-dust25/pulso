@@ -34,8 +34,15 @@
 
   // El valor real excede el rango representable: la barra se satura y deja
   // de reflejar la magnitud. Se avisa en lugar de dibujar una barra llena
-  // que sugiere un tope que no existe.
-  let fueraDeRango = $derived(valor > maxVal);
+  // (o vacia) que sugiere un tope que no existe.
+  //
+  // Se comprueban LOS DOS extremos. Antes solo se miraba por arriba, y el
+  // caso de abajo tambien ocurre: durante La Niña la anomalia del precursor
+  // baja de -1.0, que es el minimo de la barra, y una barra vacia se lee
+  // como "cero" en vez de "fuera de escala".
+  let fueraPorArriba = $derived(valor > maxVal);
+  let fueraPorAbajo = $derived(valor < minVal);
+  let fueraDeRango = $derived(fueraPorArriba || fueraPorAbajo);
 
   let colorFill = $derived(
     state === "alerta"
@@ -140,8 +147,9 @@
     {#if fueraDeRango}
       <div class="h-px w-full bg-slate-100"></div>
       <p class="text-[11px] text-slate-400 leading-relaxed">
-        El valor supera el máximo representable en la barra ({maxVal}); la barra
-        aparece completa y no refleja la magnitud real.
+        El valor queda fuera del rango representable en la barra ({minVal} a {maxVal});
+        la barra aparece {fueraPorArriba ? "completa" : "vacía"} y no refleja la
+        magnitud real.
       </p>
     {/if}
   </div>

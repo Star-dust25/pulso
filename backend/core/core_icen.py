@@ -40,23 +40,34 @@
 # los vea como lo que son: ausencia de dato.
 #
 # ------------------------------------------------------------
-# PROBLEMA 3 — SESGO REAL POR USAR OTRO PRODUCTO DE TSM
+# PROBLEMA 3 — SESGO POR USAR OTRO PRODUCTO DE TSM (Y OTRA CLIMATOLOGIA)
 #
-# Este si es real, y no es ruido. La climatologia NO es la culpable:
-# usamos 1991-2020, la misma del ENFEN. La causa es el producto de datos.
+# Este si es real, y no es ruido. Tiene DOS causas superpuestas, y es
+# importante no atribuirselo todo a una sola:
 #
-#   ICEN oficial -> ERSST v5   (reconstruccion in-situ, desde 1854)
-#   Pulso        -> OISST v2.1 (satelital, desde 1982)
+#   (a) El producto de datos.
+#       ICEN oficial -> ERSST v5   (reconstruccion in-situ, desde 1854)
+#       Pulso        -> OISST v2.1 (satelital, desde 1982)
+#       Tienen tendencias distintas en Niño 1+2.
 #
-# Tienen tendencias distintas en Niño 1+2. El sesgo DERIVA con el tiempo
-# y hasta cambia de signo:
+#   (b) La climatologia de referencia.
+#       Nosotros usamos una sola, 1991-2020. El ENFEN NO: segun la Nota
+#       Tecnica ENFEN 01-2024 el ICEN historico se calcula con una
+#       climatologia distinta cada 5 años (1976-2005 para el quinquenio
+#       1991-1995, 1981-2010 para 1996-2000, etc.), y 1991-2020 solo rige
+#       de 2006 en adelante. Es decir: cuanto mas atras vamos, mas
+#       diferimos tambien en la referencia, no solo en el producto.
+#
+# El sesgo observado DERIVA con el tiempo y hasta cambia de signo:
 #
 #   1980s  -0.35  |  1990s  -0.21  |  2000s  +0.09
 #   2010s  +0.03  |  2020s  +0.18
 #
-# Son unos +0.014 C por año, +0.61 acumulados en 44 años. Un sesgo que
-# deriva NO se arregla con una constante escrita a mano; hay que
-# recalcularlo contra la serie oficial cada vez que el IGP publique.
+# Son unos +0.014 C por año, +0.61 acumulados en 44 años. NO esta separado
+# cuanto de esa deriva viene de (a) y cuanto de (b); ambas empujan en el
+# mismo sentido temporal. Lo que si es seguro es la consecuencia practica:
+# un sesgo que deriva no se arregla con una constante escrita a mano, hay
+# que recalcularlo contra la serie oficial cada vez que el IGP publique.
 #
 # POR QUE IMPORTA TANTO: el umbral de FUERTE esta en +2.1. En mayo-2026
 # la reconstruccion cruda daba 2.17 (FUERTE) y el IGP 1.98 (MODERADA).
@@ -66,15 +77,19 @@
 # ------------------------------------------------------------
 # VALIDACION FUERA DE MUESTRA (ajuste 1982-2022, prueba 2023-2026)
 #
-#   sin correccion     EAM 0.193   categoria correcta 83%
-#   offset decadal     EAM 0.131   categoria correcta 88%
-#   correccion lineal  EAM 0.114   categoria correcta 90%
+# El acierto de categoria se mide comparando la categoria completa que
+# devuelve config_icen.clasificar() —condicion Y magnitud, ramas fria,
+# neutra y calida— para la reconstruccion y para el ICEN oficial.
 #
-# La lineal gana por poco, pero EXTRAPOLA una tendencia fuera del rango
-# de ajuste y eso envejece mal: dentro de cinco años estaria restando un
-# numero que nadie verifico. El offset sobre la ventana reciente rinde
-# casi igual, no extrapola nada y se recalcula solo. Es el que va por
-# defecto. La lineal queda disponible y declarada como experimental.
+# ATENCION: las cifras de EAM y de acierto deben releerse de la salida de
+# informe() cada vez que se cambie la tabla o el metodo de correccion. No
+# se citan aqui para no dejar numeros congelados que envejezcan mal.
+#
+# La correccion lineal rinde algo mejor que el offset, pero EXTRAPOLA una
+# tendencia fuera del rango de ajuste y eso envejece mal: dentro de cinco
+# años estaria restando un numero que nadie verifico. El offset sobre la
+# ventana reciente rinde casi igual, no extrapola nada y se recalcula
+# solo. Es el que va por defecto.
 #
 # ------------------------------------------------------------
 # COMO PRESENTAR ESTO
@@ -82,9 +97,9 @@
 # La reconstruccion NO compite con el ICEN oficial: lo ANTICIPA. El IGP
 # publica con uno o dos meses de retraso; nosotros tenemos el mes en
 # curso. La pregunta correcta no es "¿coincide con el ICEN?" sino
-# "¿predice el ICEN que el IGP publicara?". Con r=0.97 sobre 532 meses y
-# 88% de categorias correctas fuera de muestra, esa respuesta se
-# sostiene — y convierte el desfase en la contribucion, no en el error.
+# "¿predice el ICEN que el IGP publicara?". Con r=0.97 sobre 532 meses,
+# esa respuesta se sostiene — y convierte el desfase en la contribucion,
+# no en el error.
 # ============================================================
 
 import os
@@ -310,6 +325,13 @@ def validar(recon, oficial, anio_corte=2023):
 
     Validar con los mismos datos que se usaron para estimar el sesgo daria
     un numero bonito y sin valor. Este si se puede defender ante un jurado.
+
+    El acierto de categoria compara la categoria COMPLETA (condicion y
+    magnitud) que devuelve config_icen.clasificar(). Una version anterior
+    usaba np.digitize sobre los cuatro umbrales calidos, lo que metia en
+    un mismo cajon todos los meses neutros y todos los frios: dos meses de
+    La Niña de magnitudes distintas contaban como acierto. Eso inflaba el
+    porcentaje.
     """
     m = comparar_con_oficial(recon, oficial)
     if m is None or m.empty:
@@ -323,16 +345,16 @@ def validar(recon, oficial, anio_corte=2023):
     corte_v = entrena.index.max() - pd.DateOffset(years=VENTANA_SESGO_ANIOS)
     off = float((entrena.loc[entrena.index >= corte_v, 'dif']).mean())
 
-    bordes = [icen.UMBRAL_DEBIL, icen.UMBRAL_MODERADA,
-              icen.UMBRAL_FUERTE, icen.UMBRAL_EXTRAORDINARIA]
+    cat_oficial = [icen.clasificar(x) for x in prueba['icen_igp']]
 
     def medir(pred):
         err = pred - prueba['icen_igp']
-        acierto = (np.digitize(pred, bordes)
-                   == np.digitize(prueba['icen_igp'], bordes)).mean()
+        cat_pred = [icen.clasificar(x) for x in pred]
+        acierto = float(np.mean(
+            [a == b for a, b in zip(cat_pred, cat_oficial)]))
         return {'sesgo': float(err.mean()),
                 'eam': float(err.abs().mean()),
-                'acierto_categoria': float(acierto)}
+                'acierto_categoria': acierto}
 
     return {
         'n_entrenamiento': int(len(entrena)),
@@ -361,6 +383,10 @@ def _umbral_mas_cercano(valor):
     siguiente. Con una incertidumbre de +-0.15, ese valor podria ser
     perfectamente FUERTE.
 
+    La pertenencia se delega en icen.dentro() en vez de escribirla a mano:
+    el ENFEN no usa la misma convencion de bordes en la rama fria y en la
+    calida, y duplicar la comparacion aqui reintroducia el error.
+
     Devuelve (umbral, distancia, categoria_vecina).
     """
     try:
@@ -369,8 +395,8 @@ def _umbral_mas_cercano(valor):
         return None, None, None
 
     mejor = (None, None, None)
-    for inferior, superior, _, _ in icen.TABLA_ICEN:
-        if not (inferior < v <= superior):
+    for inferior, superior, cerr_ab, cerr_ar, _, _ in icen.TABLA_ICEN:
+        if not icen.dentro(v, inferior, superior, cerr_ab, cerr_ar):
             continue
         candidatos = []
         if np.isfinite(inferior):
@@ -480,14 +506,22 @@ def informe(csv_sst, txt_oficial):
             print(f'   {f:%Y-%m}  ({int(fila["n_dias_sst"])} dias)  '
                   f'-> excluido de la media movil')
 
-    print(f'\nSESGO (ventana {sesgo["desde"]} a {sesgo["hasta"]}, '
-          f'n={sesgo["n"]})')
-    print(f'   offset {sesgo["offset"]:+.3f}   sd {sesgo["sd"]:.3f}')
+    # Sin solape suficiente, sesgo['sd'] es None: hay que decirlo, no
+    # intentar formatearlo.
+    if sesgo['suficiente']:
+        print(f'\nSESGO (ventana {sesgo["desde"]} a {sesgo["hasta"]}, '
+              f'n={sesgo["n"]})')
+        print(f'   offset {sesgo["offset"]:+.3f}   sd {sesgo["sd"]:.3f}')
+    else:
+        print('\nSESGO: no estimado. No hay solape suficiente con la serie '
+              f'oficial (minimo {MINIMO_MESES_SESGO} meses). Se usa 0.000.')
 
     v = validar(recon, oficial)
     if v:
         print(f'\nVALIDACION FUERA DE MUESTRA (corte {v["anio_corte"]})')
         print(f'   r = {v["r"]:.4f} sobre {v["n_total"]} meses')
+        print(f'   entrenamiento {v["n_entrenamiento"]} meses, '
+              f'prueba {v["n_prueba"]} meses')
         for nom, k in [('sin corregir', 'sin_correccion'),
                        ('corregido', 'con_correccion')]:
             r = v[k]

@@ -39,15 +39,29 @@
 # No los elegimos "a ojo": son PERCENTILES de la propia distribucion de
 # damnificados mensuales de la serie 2003-2023 (252 meses).
 #
-#   MAYOR  >= P99 (10,251 damnificados) -> 3 meses en 21 años
-#   MENOR  >= P95 ( 1,886 damnificados) -> 13 meses en 21 años
+#   P99 = 10,250.8 damnificados  -> redondeado a 10,000 (MAYOR)
+#   P95 =  1,886.3 damnificados  -> redondeado a  2,000 (MENOR)
 #
-# Redondeados a 10,000 y 2,000 para que sean citables sin decimales.
+# Con los umbrales REDONDEADOS que usa el codigo:
+#   >= 10,000 -> 3 meses en 21 años
+#   >=  2,000 -> 12 meses en 21 años
+#
+# (Con el P95 exacto de 1,886 serian 13. La diferencia esta en un solo mes
+# que cae entre 1,886 y 2,000. Se documenta el numero que corresponde a
+# los umbrales realmente aplicados, no al percentil sin redondear.)
+#
+# Reproducible con:
+#   python core/core_impacto.py
 #
 # Esto no elimina la arbitrariedad —elegir P95 tambien es una eleccion—
 # pero la vuelve DECLARABLE y REPRODUCIBLE, que es lo que se puede
-# defender. Y por eso existe barrer_umbrales(): para enseñar que la
-# conclusion no depende del corte concreto.
+# defender. Y por eso existe barrer_umbrales().
+#
+# OJO CON COMO SE LEE EL BARRIDO: en la ultima corrida, el numero de
+# episodios con daño va de 5 a 1 segun el corte. NO es estable. La lectura
+# honesta no es "la conclusion no depende del corte", sino "entre 1,000 y
+# 2,000 el reparto se mantiene, y por eso el P95 redondeado es una
+# eleccion razonable". Decirlo de mas seria sobrevender el resultado.
 #
 # ------------------------------------------------------------
 # LO QUE ESTE MODULO NO PUEDE HACER, Y HAY QUE DECIRLO
@@ -61,19 +75,27 @@
 #
 # 3. La granularidad es MENSUAL. Un desastre a fin de mes y otro a
 #    principios del siguiente se reparten en dos filas.
+#
+# 4. LA VENTANA DEL EPISODIO PUEDE DEJAR DAÑO FUERA. El veredicto solo mira
+#    dentro de la ventana del episodio mas dos meses de margen. Si el daño
+#    ocurrio ANTES de que el sistema alertara, no se contabiliza. Caso
+#    real: el episodio de 2015-16 arranca el 17-abr-2015, asi que los
+#    5,788 damnificados de marzo de 2015 quedan fuera y el veredicto se
+#    apoya en los 3,214 de marzo de 2016. Ese daño no anticipado existe y
+#    hay que declararlo por separado.
 # ============================================================
 
 import os
 
 import pandas as pd
 
-import os
-CARPETA_DATOS = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'datos')
+CARPETA_DATOS = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                             'data', 'datos')
 CSV_SINPAD = os.path.join(CARPETA_DATOS, 'piura_emergencias_hidro_mensual.csv')
 
 # --- Cortes de severidad (percentiles de la serie 2003-2023) ---
-UMBRAL_MAYOR = 10000     # ~P99
-UMBRAL_MENOR = 2000      # ~P95
+UMBRAL_MAYOR = 10000     # ~P99 (exacto: 10,250.8)
+UMBRAL_MENOR = 2000      # ~P95 (exacto:  1,886.3)
 
 # Primer año con cobertura SINPAD. Antes de esto, el modulo no opina.
 ANIO_INICIO_SINPAD = 2003
@@ -129,6 +151,11 @@ def impacto_en_ventana(sinpad, inicio, fin, margen_meses=2, tope=None):
     (ICEN 0.47, neutro) se atribuia los 9,016 damnificados de enero de
     2017, que pertenecen al Niño costero. Un episodio no puede acreditarse
     el desastre del que viene detras.
+
+    NO hay margen por el INICIO, y eso es deliberado: un sistema de alerta
+    no puede acreditarse un daño ocurrido antes de que alertara. La
+    contrapartida es que ese daño tampoco aparece en la matriz. Ver la
+    limitacion 4 del encabezado.
     """
     if sinpad is None:
         return None
@@ -179,6 +206,12 @@ def veredicto(sinpad, inicio, fin, ultimo_dato=None, meses_en_curso=3,
          con el registro documental.
 
       3. Solo entonces se mira el daño.
+
+    NOTA sobre 'meses_en_curso': aqui son 3, pero core_alerta.py usa 30
+    DIAS para su propio marcador 'en_curso'. Son criterios distintos a
+    proposito —uno cierra el veredicto de impacto, el otro solo etiqueta
+    el episodio— pero conviene saberlo: un episodio cerrado hace dos meses
+    es 'EN CURSO' para este modulo y no lo es para core_alerta.
     """
     inicio = pd.Timestamp(inicio)
     fin = pd.Timestamp(fin)
@@ -251,10 +284,14 @@ def barrer_umbrales(sinpad, episodios, ultimo_dato=None,
     """
     ¿Cambia la conclusion si movemos el corte de "desastre"?
 
-    Si el reparto entre episodios con daño y sin daño se mantiene estable
-    a lo largo de un rango amplio de cortes, el resultado no depende del
-    numero que elegimos — y eso es exactamente lo que hay que enseñar
-    antes de que alguien pregunte por que 2,000 y no 1,500.
+    Enseñar este barrido es lo que hay que hacer antes de que alguien
+    pregunte por que 2,000 y no 1,500.
+
+    Pero hay que leerlo con honestidad: en la ultima corrida el reparto NO
+    es estable en todo el rango (va de 5 a 1 episodios con daño). Lo que
+    se sostiene es que entre 1,000 y 2,000 el reparto no cambia, y ahi es
+    donde cae el P95. Afirmar "la conclusion no depende del corte" seria
+    decir mas de lo que muestran los numeros.
 
     'episodios' es una lista de tuplas (inicio, fin).
     """
@@ -279,10 +316,26 @@ if __name__ == '__main__':
         raise SystemExit(f'Falta {CSV_SINPAD}')
     print(f'Serie SINPAD: {len(s)} meses  '
           f'({s.index[0]:%b-%Y} a {s.index[-1]:%b-%Y})')
-    print(f'Cortes: MAYOR >= {UMBRAL_MAYOR:,}  MENOR >= {UMBRAL_MENOR:,} '
-          f'damnificados en el mes pico\n')
+
+    # Percentiles reales, para que los umbrales del encabezado sean
+    # verificables sin salir del archivo.
+    p95 = s['damni'].quantile(0.95)
+    p99 = s['damni'].quantile(0.99)
+    print(f'Percentiles de damnificados/mes: P95 = {p95:,.1f}   '
+          f'P99 = {p99:,.1f}')
+    print(f'Cortes aplicados (redondeados): MAYOR >= {UMBRAL_MAYOR:,}  '
+          f'MENOR >= {UMBRAL_MENOR:,}')
+    print(f'  meses >= {UMBRAL_MAYOR:,}: {int((s.damni >= UMBRAL_MAYOR).sum())}')
+    print(f'  meses >= {UMBRAL_MENOR:,}: {int((s.damni >= UMBRAL_MENOR).sum())}\n')
+
     print('Meses por encima del corte MENOR:')
     top = s[s.damni >= UMBRAL_MENOR].sort_values('damni', ascending=False)
     for f, r in top.iterrows():
         marca = 'MAYOR' if r.damni >= UMBRAL_MAYOR else 'menor'
         print(f'  {f:%Y-%m}  {int(r.damni):>7,} damnificados   {marca}')
+
+    dudosos = anios_dudosos(s)
+    if dudosos:
+        print(f'\nAños con recurso incompleto (< {MINIMO_EMERGENCIAS_ANUALES} '
+              f'emergencias): {sorted(dudosos)}')
+        print('Quedan FUERA de la matriz de confusion.')

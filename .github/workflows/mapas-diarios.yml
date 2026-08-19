@@ -1,24 +1,53 @@
 # .github/workflows/mapas-diarios.yml
 # ============================================================
-# PULSO — regeneracion diaria de los mapas
+# PULSO — regeneracion diaria de los MAPAS
 #
 # Corre solo, todos los dias, y commitea los PNG actualizados.
 #
 # ------------------------------------------------------------
-# POR QUE UN CRON EXTERNO Y NO LA PROPIA API
+# ALCANCE REAL: SOLO LOS MAPAS
 #
-# (El argumento antiguo era que Streamlit Cloud dormia la app a las 12 h
-# sin trafico. Ya no aplica: no hay Streamlit. El motivo real es otro y
-# es mas fuerte.)
+# Este workflow ejecuta UNICAMENTE scripts/construir_mapas.py. NO
+# actualiza las series de datos.
+#
+# Es importante no confundirlo, porque el nombre "motor de vigilancia"
+# sugiere mas de lo que hace. Lo que NO corre solo:
+#
+#   scripts/construir_serie_diaria.py   -> serie_sst_diaria.csv
+#   scripts/construir_series.py         -> serie_sst.csv, serie_vegetacion.csv
+#   scripts/construir_reservorios.py    -> serie_reservorios.csv
+#
+# Esos hay que lanzarlos A MANO. Consecuencia observada: en agosto de 2026
+# los mapas estaban al dia mientras serie_sst_diaria.csv llevaba 39 dias
+# congelada. El panel de mapas se veia fresco y la alerta servia datos
+# viejos.
+#
+# (Hasta ese momento, ademas, añadirlos aqui no habria servido de nada:
+# los tres scripts tenian un fallo por el que daban el año en curso por
+# completo y no descargaban nada nuevo. Ese fallo ya esta corregido, asi
+# que automatizarlos es ahora viable. Queda pendiente como decision, no
+# como imposibilidad tecnica.)
+#
+# ------------------------------------------------------------
+# POR QUE UN CRON EXTERNO Y NO LA PROPIA API
 #
 # Componer una imagen en Earth Engine tarda entre diez y cuarenta
 # segundos: es computo real, tesela por tesela, no latencia de red. Eso
 # no puede vivir dentro de una peticion HTTP — el usuario se queda
 # mirando una pantalla en blanco y el worker de FastAPI queda bloqueado.
 #
-# Ademas, el motor de vigilancia debe correr aunque nadie mire. Si los
-# mapas se generaran al abrir la pestaña, estarian frescos justo cuando
-# no importa y viejos de madrugada, que es cuando importa.
+# Ademas, los mapas deben regenerarse aunque nadie mire. Si se generaran
+# al abrir la pestaña, estarian frescos justo cuando no importa.
+#
+# ------------------------------------------------------------
+# SI EL CRON DEJA DE EJECUTARSE
+#
+# GitHub DESACTIVA los workflows programados tras 60 dias sin actividad
+# en el repositorio. No falla: simplemente deja de correr, en silencio, y
+# la pestaña Actions muestra un aviso para reactivarlo.
+#
+# Es la primera causa a revisar cuando los mapas envejecen sin que nada
+# aparezca en rojo. Un `workflow_dispatch` manual lo reactiva.
 #
 # ------------------------------------------------------------
 # LO QUE HAY QUE CONFIGURAR ANTES (una vez)
@@ -62,7 +91,7 @@ on:
     - cron: "0 9 * * *"
   # Permite lanzarlo a mano desde la pestaña Actions. Imprescindible el
   # dia antes de presentar: no quieres descubrir a las 8 de la mañana que
-  # el cron llevaba una semana fallando.
+  # el cron llevaba una semana desactivado.
   workflow_dispatch:
 
 permissions:
@@ -83,10 +112,19 @@ jobs:
           python-version: "3.11"
           cache: pip
 
+      # Se instala la lista minima que necesita construir_mapas.py, no
+      # backend/requirements.txt entero: el runner no monta la API ni
+      # ejecuta los analisis, y arrastrar matplotlib/fastapi aqui solo
+      # alarga la corrida.
+      #
+      # CONTRAPARTIDA: son dos declaraciones de dependencias que pueden
+      # divergir. Si construir_mapas.py o core_series.py empiezan a
+      # importar algo nuevo, hay que añadirlo TAMBIEN aqui, o el workflow
+      # fallara con un ModuleNotFoundError que no se reproduce en local.
       - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip
-          pip install earthengine-api pandas numpy
+          pip install earthengine-api
 
       - name: Regenerar los mapas
         env:

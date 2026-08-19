@@ -2,7 +2,9 @@
 PROYECTO_ID = 'monitor-bosqueseco'
 
 RUTAS_ASSETS = {
-    # --- Base de Datos Oficial (ZEE 2013) ---
+    # --- Base cartográfica oficial: Zonificación Ecológica Económica de Piura ---
+    # Fuente: Gobierno Regional de Piura.
+    # Aprobada por Ordenanza Regional N° 261-2013/GRP-CR.
     'limite': 'projects/monitor-bosqueseco/assets/limite_piura_corregido',
     'vegetacion': 'projects/monitor-bosqueseco/assets/cobertura_vegetal',
     'rios': 'projects/monitor-bosqueseco/assets/red_hidrografica',
@@ -10,8 +12,12 @@ RUTAS_ASSETS = {
     'peligros_fen': 'projects/monitor-bosqueseco/assets/peligros_multiples',
     'inundaciones': 'projects/monitor-bosqueseco/assets/inundacion_historica',
     'zee_oficial': 'projects/monitor-bosqueseco/assets/zee_macrozonificacion',
-    
-    # --- Base de Datos MINAM (Ecosistemas 2022) ---
+
+    # --- Mapa Regional de Ecosistemas del Departamento de Piura ---
+    # Fuente: Gobierno Regional de Piura, en coordinacion con el MINAM.
+    # Archivo original: 20221129_MINAM_ECOSISTEMAS.shp (29-nov-2022),
+    # con memoria descriptiva GRP-MINAM del 30-nov-2022.
+    # Aprobado por Ordenanza Regional N° 492-2023/GRP-CR (El Peruano, 22-dic-2023).
     'ecosistemas_2022': 'projects/monitor-bosqueseco/assets/ecosistemas_piura_2022'
 }
 

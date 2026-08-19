@@ -84,7 +84,8 @@
           <p
             class="text-xs text-slate-500 md:text-right max-w-xs leading-relaxed"
           >
-            Datos: NOAA OISST v2.1 · USGS Landsat 8 · MINAM
+            Datos: NOAA OISST v2.1 · USGS Landsat 8 · Mapa Regional de
+            Ecosistemas de Piura (GORE Piura, O.R. 492-2023) · INDECI (SINPAD)
           </p>
           <p
             class="text-xs text-slate-400 md:text-right max-w-xs leading-relaxed"
