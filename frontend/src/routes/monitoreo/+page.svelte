@@ -10,6 +10,12 @@
   let tabActiva = $state("LITORAL"); // LITORAL, MONTES, ANDES
   let periodoActivo = $state("actual_2026"); // actual_2026, nino_2017, nino_2015_16
 
+  // 'res' describe la resolución NATIVA del sensor, no la del mapa que se
+  // muestra. La miniatura son 900 px sobre un recuadro de ~2.6° × 2.5°, así
+  // que cada píxel de pantalla ronda los 300 m; el KPI también se promedia a
+  // 300 m. Promediar a esa escala sobre miles de km² da prácticamente el
+  // mismo número y cuesta cien veces menos, pero conviene no dar a entender
+  // que la imagen está a 30 m.
   const etiquetas: Record<
     string,
     { titulo: string; unidad: string; sensor: string; res: string }
@@ -18,19 +24,19 @@
       titulo: "Temperatura Superficial del Mar",
       unidad: "°C",
       sensor: "NOAA OISST v2.1",
-      res: "0.25° (~28 km) · Diario",
+      res: "0.25° (~28 km) nativo · Cadencia diaria",
     },
     MONTES: {
       titulo: "Vigor Vegetal Bosque Seco (MSAVI)",
       unidad: "",
       sensor: "Landsat 8 C2 L2",
-      res: "30 m · Mediana mensual",
+      res: "30 m nativo · Compuesto mediano, remuestreado para el visor",
     },
     ANDES: {
       titulo: "Humedad del Páramo (NDMI)",
       unidad: "",
       sensor: "Landsat 8 C2 L2",
-      res: "30 m · Mediana mensual",
+      res: "30 m nativo · Compuesto mediano, remuestreado para el visor",
     },
   };
 
@@ -112,7 +118,14 @@
     </p>
   </header>
 
-  <div class="border-b border-slate-100 pb-8 mb-8 space-y-4">
+  <!--
+    Los dos filtros en UNA fila: ecosistema a la izquierda, periodo a la
+    derecha. En pantallas estrechas 'flex-col' los apila igual que antes,
+    asi que no se pierde nada en movil.
+  -->
+  <div
+    class="border-b border-slate-100 pb-8 mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+  >
     <!-- Ecosistema -->
     <div class="flex flex-wrap gap-3">
       {#each Object.keys(etiquetas) as tab}
@@ -130,7 +143,7 @@
 
     <!-- Periodo -->
     {#if periodosDisponibles.length > 1}
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2 lg:justify-end">
         <span
           class="text-xs font-semibold uppercase tracking-wider text-slate-400 mr-1"
           >Periodo</span
@@ -181,8 +194,15 @@
               {mapaActual.error}
             </p>
           {/if}
+          <!-- Antes decía "la rutina diaria volverá a intentarlo", en
+                         futuro y sin matices. GitHub desactiva los workflows
+                         programados tras 60 días sin actividad en el
+                         repositorio, así que esa promesa puede no cumplirse
+                         sin que nada lo indique. -->
           <p class="text-xs mt-2">
-            La rutina diaria (GitHub Actions) volverá a intentarlo.
+            Se puede regenerar con <code class="font-mono"
+              >scripts/construir_mapas.py</code
+            >, o desde la rutina programada de GitHub Actions si sigue activa.
           </p>
         </div>
       {:else}

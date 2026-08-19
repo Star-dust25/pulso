@@ -1,9 +1,14 @@
-# backtest_fen.py   (v2 - CORREGIDO)
+# backtest_fen.py   (v3)
 # ============================================================
-#   python backtest_fen.py
+#   Ejecutar DESDE backend/:
+#       python scripts/backtest_fen.py
 #
-# Reconstruye el INDICE COSTERO EL NIÑO (ICEN) de ENFEN con el pipeline
-# de Pulso y lo valida contra los eventos historicos de Piura.
+#   Requiere que backend/ este en el PYTHONPATH para resolver
+#   'config' y 'core'. En PowerShell:
+#       $env:PYTHONPATH="<ruta>\backend"
+#
+# Reconstruye el INDICE COSTERO EL NIÑO (ICEN) con el pipeline de Pulso y
+# lo valida contra los eventos historicos de Piura.
 #
 # ------------------------------------------------------------
 # QUE SE CORRIGIO RESPECTO A LA v1 (y por que importa):
@@ -19,16 +24,67 @@
 #
 # Un numero espectacular pero falso destruye un proyecto. Uno modesto
 # y verdadero lo sostiene.
-# ------------------------------------------------------------
 #
-# METODOLOGIA (ENFEN, Nota Tecnica 2012):
+# ------------------------------------------------------------
+# QUE SE CORRIGIO EN LA v3: EL UMBRAL DE DETECCION
+#
+# Este script detectaba eventos con ICEN > +0.4 C y lo rotulaba como
+# "metodologia ENFEN 2012". Ese rotulo ya no vale:
+#
+#   - La Nota Tecnica ENFEN 01-2024 (diciembre 2024) reemplaza a la de
+#     abril de 2012. En la tabla vigente, las condiciones CALIDAS empiezan
+#     por encima de +0.5, no de +0.4. La banda neutra llega hasta +0.5.
+#   - El archivo ademas MEZCLABA tablas: usaba config_icen (2024) para las
+#     magnitudes y el umbral de 2012 para detectar los eventos.
+#
+# DECISION: el valor +0.4 SE MANTIENE, pero deja de presentarse como
+# criterio del ENFEN. Es el UMBRAL OPERATIVO DE PULSO, deliberadamente mas
+# bajo que el oficial.
+#
+# El motivo no es cosmetico y conviene poder defenderlo: el ICEN es un
+# indice de DIAGNOSTICO —sirve para declarar oficialmente que hubo un Niño
+# costero— mientras que Pulso es un sistema de ALERTA. Un sistema de
+# alerta dispara antes y acepta mas falsas alarmas a cambio de no llegar
+# tarde. Bajar el umbral es esa eleccion, hecha a proposito y declarada.
+#
+# Lo que NO se puede decir es "asi lo define el ENFEN". No lo define asi.
+#
+# NOTA para quien retome esto: subir el umbral a +0.5 alinearia el script
+# con la tabla vigente, pero cambiaria que rachas se detectan y con ello
+# los conteos, la anticipacion y el CSV de salida. No se hizo porque
+# obligaria a revalidar todas las cifras publicadas.
+#
+# ------------------------------------------------------------
+# METODOLOGIA
 #   ICEN = media movil de 3 meses de la anomalia mensual de TSM
 #          en la region Niño 1+2 (90W-80W, 10S-0)
-#   Evento = ICEN > +0.4 C durante >= 3 meses consecutivos
+#   Criterio ENFEN vigente : condiciones calidas (ICEN > +0.5) durante
+#                            >= 3 meses consecutivos
+#   Criterio operativo Pulso: ICEN > +0.4 durante >= 3 meses consecutivos
 #
 # HONESTIDAD METODOLOGICA:
-#   ENFEN usa ERSSTv5. Nosotros usamos OISST v2.1.
+#   ENFEN usa ERSSTv5 con climatologias escalonadas cada 5 años.
+#   Nosotros usamos OISST v2.1 con una sola climatologia 1991-2020.
 #   Esto es una RECONSTRUCCION, no una replica del indice oficial.
+#
+# ------------------------------------------------------------
+# ESTE SCRIPT Y core_alerta.py NO CUENTAN LO MISMO
+#
+# Los dos detectan episodios, pero con detectores distintos, asi que sus
+# numeros NO tienen por que coincidir y no es un error que difieran:
+#
+#   backtest_fen.py : ICEN MENSUAL (media movil de 3 meses).
+#                     Menos episodios, mas largos.
+#   core_alerta.py  : precursor DIARIO (media movil de 30 dias).
+#                     Mas episodios, mas cortos, y detecta antes.
+#
+# Por eso la anticipacion de 2017 sale -5 dias aqui y +68 dias alli. Esa
+# diferencia NO es una inconsistencia: es exactamente el argumento del
+# proyecto. La regla mensual llega tarde; la cadencia diaria recupera
+# semanas. Ambas cifras se muestran juntas en la web por ese motivo.
+#
+# Si se citan conteos de episodios o precisiones, hay que decir de cual de
+# los dos detectores salen.
 # ============================================================
 
 import os
@@ -39,14 +95,33 @@ import pandas as pd
 from config import config_icen as icen
 from core import core_impacto as impacto
 
-CARPETA_DATOS = os.path.join('data', 'datos')
-CARPETA_SALIDA = os.path.join('data', 'salidas')
+# Anclado al archivo, no al directorio de trabajo. scripts/ vive dentro de
+# backend/, asi que subimos un nivel. Con rutas relativas el script solo
+# funcionaba si se lanzaba exactamente desde backend/, y fallaba en
+# silencio (FileNotFoundError) desde cualquier otro sitio.
+CARPETA_BACKEND = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CARPETA_DATOS = os.path.join(CARPETA_BACKEND, 'data', 'datos')
+CARPETA_SALIDA = os.path.join(CARPETA_BACKEND, 'data', 'salidas')
 CSV_SST = os.path.join(CARPETA_DATOS, 'serie_sst.csv')
 
 CLIMATOLOGIA_INICIO = 1991
 CLIMATOLOGIA_FIN = 2020
 
+# Dias minimos de OISST para que un mes cuente como observado.
+#
+# Mismo criterio que core_icen.py, y por la misma razon: sin esta guarda,
+# un mes A MEDIO CONSTRUIR entra en la media movil de tres meses con el
+# mismo peso que uno completo. En agosto de 2026, con 15 dias de dato,
+# este script publicaba ICEN = +3.58 y magnitud EXTRAORDINARIA mientras
+# core_icen.py —que si filtraba— reportaba julio y FUERTE. Dos modulos
+# del mismo sistema contradiciendose sobre el mes en curso.
+DIAS_MINIMOS_MES = 25
+
+# Umbral OPERATIVO de Pulso, no el del ENFEN. Ver la nota de la v3 arriba.
+# El ENFEN vigente situa el inicio de condiciones calidas en +0.5.
 UMBRAL_EVENTO = 0.4
+UMBRAL_ENFEN_CALIDO = 0.5   # solo para poder mostrar la diferencia
+
 MESES_CONSECUTIVOS = 3
 TOLERANCIA_CIERRE = 2      # meses que la alerta puede haber cerrado antes
 
@@ -82,6 +157,12 @@ def clasificar(valor):
     Devuelve solo la MAGNITUD ('FUERTE', 'MODERADA', ...) porque es lo que
     consumen las tablas de este script. Si necesitas ademas la condicion
     (calida / fria / neutra), usa config_icen.clasificar() o .etiqueta().
+
+    OJO: aqui se aplica al maximo del ICEN OPERATIVO (media retrasada). El
+    ENFEN define las magnitudes sobre el ICEN centrado. Son cifras
+    parecidas pero no identicas; la magnitud reportada por este script es
+    la del valor que el sistema habria visto EN VIVO, que es justamente lo
+    que interesa en un backtest de alerta.
     """
     if pd.isna(valor):
         return 'S/D'
@@ -98,6 +179,22 @@ def construir_icen():
     base = df.loc[str(CLIMATOLOGIA_INICIO):str(CLIMATOLOGIA_FIN)]
     clim = base.groupby(base.index.month)['sst_nino12'].mean()
     df['anomalia'] = df['sst_nino12'] - df.index.month.map(clim)
+
+    # Los meses mal cubiertos se anulan ANTES de la media movil. Poner NaN
+    # (y no el valor parcial) hace que rolling(min_periods=3) los trate
+    # como el hueco que son, en vez de promediarlos como si fueran un mes
+    # entero. Ver la nota de DIAS_MINIMOS_MES.
+    if 'n_dias_sst' in df.columns:
+        incompletos = df['n_dias_sst'] < DIAS_MINIMOS_MES
+        n_desc = int((incompletos & df['anomalia'].notna()).sum())
+        if n_desc:
+            ultimos = df.index[incompletos & df['anomalia'].notna()][-3:]
+            print(f'[cobertura] {n_desc} mes(es) descartados por tener menos '
+                  f'de {DIAS_MINIMOS_MES} dias de OISST.')
+            for f in ultimos:
+                print(f'            {f:%Y-%m} '
+                      f'({int(df.loc[f, "n_dias_sst"])} dias)')
+        df['anomalia'] = df['anomalia'].where(~incompletos, np.nan)
 
     # ICEN oficial: media movil CENTRADA -> no existe en tiempo real
     df['icen'] = df['anomalia'].rolling(3, center=True, min_periods=3).mean()
@@ -251,9 +348,12 @@ def graficar(df):
                     where=df['icen'] > UMBRAL_EVENTO,
                     color='#e74c3c', alpha=0.55)
     ax.axhline(UMBRAL_EVENTO, ls='--', lw=1, color='#e67e22',
-               label='Umbral El Niño costero (+0.4 C)')
+               label=f'Umbral operativo Pulso (+{UMBRAL_EVENTO} °C)')
+    ax.axhline(UMBRAL_ENFEN_CALIDO, ls='-.', lw=1, color='#8e44ad',
+               label=f'Inicio condiciones calidas ENFEN 2024 '
+                     f'(+{UMBRAL_ENFEN_CALIDO} °C)')
     ax.axhline(icen.UMBRAL_FUERTE, ls=':', lw=1, color='#c0392b',
-               label=f'FUERTE (+{icen.UMBRAL_FUERTE} C)')
+               label=f'FUERTE (+{icen.UMBRAL_FUERTE} °C)')
     ax.axhline(0, lw=0.6, color='gray')
 
     for nombre, fecha in DESASTRES.items():
@@ -264,7 +364,7 @@ def graficar(df):
 
     ax.set_title('Pulso — Reconstruccion del Indice Costero El Niño (ICEN)\n'
                  'Region Niño 1+2 | OISST v2.1 | Climatologia 1991-2020 | '
-                 'Metodologia ENFEN 2012',
+                 'Categorias: Nota Tecnica ENFEN 01-2024',
                  fontsize=11, loc='left')
     ax.set_ylabel('ICEN (°C)')
     ax.legend(fontsize=8, loc='upper left')
@@ -282,7 +382,7 @@ def graficar(df):
     ax.plot(zoom.index, zoom['icen_operativo'], marker='o', ms=4, lw=1.8,
             color='#1f3a5f', label='ICEN operativo (Pulso)')
     ax.axhline(UMBRAL_EVENTO, ls='--', color='#e67e22',
-               label='Umbral de alerta (+0.4 °C)')
+               label=f'Umbral operativo Pulso (+{UMBRAL_EVENTO} °C)')
     ax.axhline(0, lw=0.6, color='gray')
     ax.axvline(desastre, color='#c0392b', lw=2.2,
                label='Desborde río Piura\n27-mar-2017 · 3,468 m³/s')
@@ -307,17 +407,25 @@ def graficar(df):
     fig.savefig(os.path.join(CARPETA_SALIDA, '2_backtest_2017.png'), dpi=160)
     plt.close(fig)
 
-    print(f'\nGraficos en ./{CARPETA_SALIDA}/')
+    print(f'\nGraficos en {CARPETA_SALIDA}')
+    print('  RECUERDA: si la web muestra alguno, copialo tambien a '
+          'data/salidas/mapas/')
 
 
 def main():
     df = construir_icen()
     os.makedirs(CARPETA_SALIDA, exist_ok=True)
 
-    print('=== RECONSTRUCCION DEL ICEN (metodologia ENFEN 2012) ===')
+    print('=== RECONSTRUCCION DEL ICEN ===')
     print(f'Region Niño 1+2 | climatologia {CLIMATOLOGIA_INICIO}-{CLIMATOLOGIA_FIN}')
     print('Fuente: OISST v2.1 (ENFEN usa ERSSTv5 -> es reconstruccion, '
-          'no replica)\n')
+          'no replica)')
+    print(f'Categorias: Nota Tecnica ENFEN 01-2024')
+    print(f'Deteccion de rachas: umbral OPERATIVO de Pulso +{UMBRAL_EVENTO} °C '
+          f'durante >= {MESES_CONSECUTIVOS} meses.')
+    print(f'  (El ENFEN situa el inicio de condiciones calidas en '
+          f'+{UMBRAL_ENFEN_CALIDO} °C. Pulso usa un umbral mas bajo a')
+    print('   proposito: es un sistema de ALERTA, no de diagnostico.)\n')
 
     print('=== BACKTEST: ANTICIPACION REAL ===')
     print('Solo cuenta la alerta VIGENTE en el desastre. Una alerta de un\n'
@@ -402,8 +510,11 @@ def main():
         print(f'\n=== ESTADO ACTUAL ===')
         print(f'Ultimo dato: {fecha_ult:%b-%Y}   ICEN operativo = {valor_ult:+.2f}'
               f'   [{clasificar(valor_ult)}]')
-        print('VERIFICAR contra el ICEN oficial en met.igp.gob.pe/elnino/ '
-              'antes de presentar.')
+        print('OJO: este valor es SIN corregir el sesgo OISST-ERSST. El valor '
+              'que la app publica')
+        print('sale de core_icen.py, que si aplica la correccion. Verificar '
+              'contra el ICEN oficial')
+        print('en met.igp.gob.pe/elnino/ antes de presentar.')
 
     df.to_csv(os.path.join(CARPETA_SALIDA, 'icen_reconstruido.csv'))
     graficar(df)
