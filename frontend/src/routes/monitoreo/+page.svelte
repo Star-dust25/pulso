@@ -18,19 +18,19 @@
       titulo: "Temperatura Superficial del Mar",
       unidad: "°C",
       sensor: "NOAA OISST v2.1",
-      res: "0.25° (~28 km) · Diario",
+      res: "0.25° (~28 km) · Cadencia diaria",
     },
     MONTES: {
       titulo: "Vigor Vegetal Bosque Seco (MSAVI)",
       unidad: "",
       sensor: "Landsat 8 C2 L2",
-      res: "30 m · Mediana mensual",
+      res: "30 m · Mediana del periodo",
     },
     ANDES: {
       titulo: "Humedad del Páramo (NDMI)",
       unidad: "",
       sensor: "Landsat 8 C2 L2",
-      res: "30 m · Mediana mensual",
+      res: "30 m · Mediana del periodo",
     },
   };
 

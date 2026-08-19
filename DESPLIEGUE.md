@@ -1,132 +1,117 @@
 # DESPLIEGUE — Pulso
 
-Objetivo: una URL publica para el codigo QR del stand.
+Estado actual: **el sistema se ejecuta localmente**. No hay despliegue público.
+Esta guía cubre cómo levantarlo y cómo demostrarlo.
 
 ---
 
-## PASO 0 — Comprueba que los datos entran al repositorio
+## Arquitectura
 
-Streamlit Cloud NO ejecuta los scripts de descarga. Los CSV **tienen que
-viajar dentro del repo**, o cuatro de las cinco pestañas quedan vacias.
+Dos servicios independientes:
+
+| Servicio | Tecnología | Puerto |
+|---|---|---|
+| Backend | FastAPI (Python) | 8000 |
+| Frontend | SvelteKit (Node) | 5173 |
+
+El frontend consume el backend. Si el backend no está levantado, la interfaz
+carga pero muestra el error de conexión: no se rompe, avisa.
+
+---
+
+## PASO 1 — Levantar el backend
 
 ```powershell
-git check-ignore datos/serie_sst.csv salidas/icen_reconstruido.csv
+cd backend
+python main.py
 ```
 
-Si imprime algo, esos archivos estan siendo ignorados y hay que arreglarlo.
-Si no imprime nada, entran. Correcto.
+Comprueba que responde antes de seguir. En el navegador:
 
-Peso total de `datos/` + `salidas/`: unos pocos MB. Sin problema.
+```
+http://127.0.0.1:8000/api/alerta/estado
+```
+
+Debe devolver un JSON con `precursor`, `z_msavi` y `etapa1_activa`. Si no
+responde, nada más va a funcionar.
 
 ---
 
-## PASO 1 — Repositorio en GitHub
+## PASO 2 — Levantar el frontend
+
+En **otra** terminal, sin cerrar la anterior:
 
 ```powershell
-git init
-git add .
-git commit -m "Pulso - Sistema de Alerta Temprana ante El Nino Costero"
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/pulso.git
-git push -u origin main
+cd frontend
+npm install
+npm run dev
 ```
 
-Antes de hacer push, VERIFICA que no sube basura:
+Abre `http://localhost:5173`.
 
-```powershell
-git status --short
+### Variable de entorno
+
+El frontend necesita saber dónde está el backend. Copia `.env.example` a
+`.env`:
+
+```
+PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
-No debe aparecer `venv/`, ni `__pycache__/`, ni ningun `.json`.
-Si aparece un `.json`, PARA: puede ser una credencial.
+Si la variable falta, `src/lib/api.ts` cae de vuelta a `127.0.0.1:8000`, así
+que en local funciona igual. Para cualquier otra máquina, hay que ponerla.
+
+**SvelteKit no recarga el `.env` en caliente.** Si lo cambias, detén el
+servidor y vuelve a levantarlo.
 
 ---
 
-## PASO 2 — Cuenta de servicio de Earth Engine
+## PASO 3 — Verificación antes de presentar
 
-Este es el paso que puede fallar. Tu portatil usa OAuth personal (tu
-navegador). **Un servidor no tiene navegador.** Necesita una cuenta de
-servicio.
+Recorre las cuatro pestañas y confirma:
 
-1. Entra a `console.cloud.google.com`, proyecto **monitor-bosqueseco**.
-2. `IAM y administracion` -> `Cuentas de servicio` -> **Crear**.
-   - Nombre: `pulso-streamlit`
-   - Rol: `Earth Engine Resource Viewer` (o `Editor` si da problemas)
-3. Abre la cuenta creada -> pestaña `Claves` -> `Agregar clave` ->
-   `Crear clave nueva` -> **JSON**. Se descarga un archivo.
-   **Ese archivo NO va al repositorio. Nunca.**
-4. Registra la cuenta en Earth Engine:
-   `https://code.earthengine.google.com/register`
-   -> registra el correo de la cuenta de servicio
-   (`pulso-streamlit@monitor-bosqueseco.iam.gserviceaccount.com`)
+- [ ] **Resumen** — el banner muestra estado, y las dos barras traen número y fecha
+- [ ] **Monitoreo Satelital** — los tres ecosistemas cargan mapa, y los tres periodos también (9 mapas en total)
+- [ ] **Backtest** — las tres tarjetas de anticipación y el gráfico comparativo
+- [ ] **Validación** — las tres métricas y el gráfico de validación del ICEN
+
+Si un gráfico no aparece, es que el backend no está sirviendo `/static/mapas/`.
+Revisa el PASO 1.
 
 ---
 
-## PASO 3 — Streamlit Cloud
+## PASO 4 — Antes de salir de casa
 
-1. `share.streamlit.io` -> inicia sesion con GitHub.
-2. `New app` -> elige el repo -> archivo principal: `app_pulso.py`.
-3. Antes de desplegar: `Advanced settings` -> **Secrets**.
-   Pega el contenido del JSON traducido a formato TOML:
-
-```toml
-[gee_service_account]
-type = "service_account"
-project_id = "monitor-bosqueseco"
-private_key_id = "..."
-private_key = "-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
-client_email = "pulso-streamlit@monitor-bosqueseco.iam.gserviceaccount.com"
-client_id = "..."
-auth_uri = "https://accounts.google.com/o/oauth2/auth"
-token_uri = "https://oauth2.googleapis.com/token"
-auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
-client_x509_cert_url = "..."
-universe_domain = "googleapis.com"
-```
-
-CUIDADO con `private_key`: debe ir entre comillas dobles y conservar los
-`\n` literales tal como aparecen en el JSON.
-
-4. `Deploy`. Tarda unos minutos.
+- [ ] Los dos servicios arrancan desde cero (cierra todo y vuelve a empezar)
+- [ ] Existe `frontend/.env`
+- [ ] Las dependencias están instaladas (`pip` y `npm`) — **no confíes en tener wifi en el local**
+- [ ] Batería y cargador
+- [ ] Adaptador de vídeo para el proyector
 
 ---
 
-## SI EL PASO 2 O 3 FALLA
+## Plan B si algo falla en vivo
 
-No es una catastrofe. **Despliega igual.**
+Los resultados están en `backend/data/salidas/` como imágenes PNG ya
+generadas. Ábrelas directamente desde el explorador de archivos:
 
-Sin cuenta de servicio, la pestaña de MONITOREO mostrara la banda ambar
-"Sin conexion a Google Earth Engine", y las otras CUATRO pestañas —Estado,
-Backtest, Validacion e Impacto— funcionaran perfectamente, porque leen de
-los CSV del repositorio.
+| Archivo | Qué muestra |
+|---|---|
+| `5_dos_etapas_2015_vs_2017.png` | El hallazgo central |
+| `6_estado_actual.png` | El estado del sistema hoy |
+| `3_validacion_icen.png` | La validación contra el índice oficial |
+| `2_backtest_2017.png` | La anticipación en 2017 |
+| `mapas/*.png` | Los nueve mapas por ecosistema y periodo |
 
-El QR seguiria dando acceso al 80% del sistema, y el mapa satelital lo
-demuestras en vivo desde el portatil.
-
-No es un plan B improvisado: es la misma arquitectura de degradacion con
-gracia que ya probamos con el wifi.
-
----
-
-## PASO 4 — El codigo QR
-
-Con la URL final (`https://TU-APP.streamlit.app`):
-
-- `qr-code-generator.com` o similar
-- Descarga en PNG, alta resolucion
-- Imprimelo GRANDE (minimo 10x10 cm) para que se escanee de lejos
-- Debajo, el texto: **"Pulso — Sistema en vivo"** y la URL escrita
-
-Pruebalo con TU PROPIO movil antes de imprimir.
+El argumento del proyecto no depende de que la web arranque.
 
 ---
 
-## PASO 5 — Prueba en movil
+## Pendiente: despliegue público
 
-Abre la URL en el telefono y revisa:
+Un despliegue con URL pública requiere alojar los dos servicios por separado
+(backend con Python, frontend estático o en Node) y apuntar `PUBLIC_API_URL`
+a la dirección pública del backend.
 
-- [ ] El titulo no se corta
-- [ ] Las tarjetas de Etapa 1 y 2 se apilan, no se aplastan
-- [ ] La tabla 2015 vs 2017 permite scroll horizontal
-- [ ] Las pestañas caben (o hacen scroll)
-- [ ] Las cifras grandes siguen legibles
+No está hecho ni probado. Documentarlo aquí sin haberlo verificado sería
+describir algo que no existe.

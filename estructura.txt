@@ -1,0 +1,105 @@
+pulso/
+├── .devcontainer/
+│   └── devcontainer.json
+├── .github/
+│   └── workflows/
+│       └── mapas-diarios.yml
+├── backend/
+│   ├── api/
+│   │   ├── alerta.py
+│   │   └── mapas.py
+│   ├── config/
+│   │   ├── config.py
+│   │   ├── config_ecosistemas.py
+│   │   └── config_icen.py
+│   ├── core/
+│   │   ├── core_alerta.py
+│   │   ├── core_icen.py
+│   │   ├── core_impacto.py
+│   │   ├── core_lag.py
+│   │   ├── core_reservorio.py
+│   │   ├── core_series.py
+│   │   └── core_vivo.py
+│   ├── data/
+│   │   ├── datos/
+│   │   │   ├── piura_emergencias_hidro_mensual.csv
+│   │   │   ├── serie_reservorios.csv
+│   │   │   ├── serie_sst.csv
+│   │   │   ├── serie_sst_diaria.csv
+│   │   │   └── serie_vegetacion.csv
+│   │   └── salidas/
+│   │       ├── mapas/
+│   │       │   ├── ANDES__actual_2026.png
+│   │       │   ├── ANDES__nino_2015_16.png
+│   │       │   ├── ANDES__nino_2017.png
+│   │       │   ├── LITORAL__actual_2026.png
+│   │       │   ├── LITORAL__nino_2015_16.png
+│   │       │   ├── LITORAL__nino_2017.png
+│   │       │   ├── MONTES__actual_2026.png
+│   │       │   ├── MONTES__nino_2015_16.png
+│   │       │   ├── MONTES__nino_2017.png
+│   │       │   └── indice.json
+│   │       ├── 1_icen_historico.png
+│   │       ├── 2_backtest_2017.png
+│   │       ├── 3_validacion_icen.png
+│   │       ├── 4_alerta_diaria_2017.png
+│   │       ├── 5_dos_etapas_2015_vs_2017.png
+│   │       ├── 6_estado_actual.png
+│   │       ├── alerta_diaria.csv
+│   │       ├── episodios_evaluados.csv
+│   │       ├── icen_oficial.txt
+│   │       └── icen_reconstruido.csv
+│   ├── scripts/
+│   │   ├── backtest_fen.py
+│   │   ├── construir_mapas.py
+│   │   ├── construir_reservorios.py
+│   │   ├── construir_serie_diaria.py
+│   │   ├── construir_series.py
+│   │   ├── validar_icen.py
+│   │   └── verificar_datos.py
+│   ├── main.py
+│   └── requirements.txt
+├── frontend/
+│   ├── .vscode/
+│   │   ├── extensions.json
+│   │   └── settings.json
+│   ├── src/
+│   │   ├── lib/
+│   │   │   ├── assets/
+│   │   │   │   └── favicon.svg
+│   │   │   ├── components/
+│   │   │   │   ├── DashboardContainer.svelte
+│   │   │   │   ├── EvolutionChart.svelte
+│   │   │   │   ├── GaugeChart.svelte
+│   │   │   │   ├── ThresholdBar.svelte
+│   │   │   │   └── Tooltip.svelte
+│   │   │   ├── api.ts
+│   │   │   └── index.ts
+│   │   ├── routes/
+│   │   │   ├── backtest/
+│   │   │   │   └── +page.svelte
+│   │   │   ├── impacto/
+│   │   │   │   └── +page.svelte
+│   │   │   ├── monitoreo/
+│   │   │   │   └── +page.svelte
+│   │   │   ├── +layout.svelte
+│   │   │   ├── +page.svelte
+│   │   │   └── layout.css
+│   │   ├── app.d.ts
+│   │   └── app.html
+│   ├── static/
+│   │   └── robots.txt
+│   ├── .env
+│   ├── .env.example
+│   ├── .gitignore
+│   ├── .npmrc
+│   ├── README.md
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── vite.config.ts
+├── .gitignore
+├── DESPLIEGUE.md
+├── README.md
+├── estructura.txt
+└── requirements.txt

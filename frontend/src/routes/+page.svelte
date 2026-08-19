@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { getJSON } from "$lib/api";
   import DashboardContainer from "$lib/components/DashboardContainer.svelte";
   import ThresholdBar from "$lib/components/ThresholdBar.svelte";
   import EvolutionChart from "$lib/components/EvolutionChart.svelte";
@@ -10,11 +11,11 @@
 
   onMount(async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/alerta/estado");
-      if (!res.ok) throw new Error("Network response was not ok");
-      data = await res.json();
+      data = await getJSON("/api/alerta/estado");
     } catch (err) {
-      error = "Error fetching data";
+      // getJSON ya distingue entre backend caido, 500 y CORS.
+      // Reemplazarlo por un mensaje generico seria perder esa informacion.
+      error = err instanceof Error ? err.message : String(err);
       console.error(err);
     } finally {
       loading = false;
@@ -49,8 +50,8 @@
         <strong class="font-semibold text-slate-900"
           >Sistema de Alerta Temprana ante El Niño Costero.</strong
         >
-        Detección en dos etapas basada en la respuesta del litoral, bosque seco y
-        páramo andino sobre datos satelitales de NOAA, USGS y MINAM.
+        Detección en dos etapas: anomalía térmica del litoral y respuesta del bosque
+        seco, sobre datos satelitales de NOAA, USGS y MINAM.
       </p>
     </div>
   </header>
@@ -61,7 +62,7 @@
         class="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-800"
       ></div>
       <span class="text-slate-400 font-medium text-sm tracking-wide"
-        >Sincronizando con motor de inferencia...</span
+        >Cargando datos de monitoreo...</span
       >
     </div>
   {:else if error}
@@ -123,7 +124,7 @@
           ? "Precursor oceánico activo: Sin confirmación territorial."
           : nivel === "rojo"
             ? "Alerta Roja: Mar y Territorio coinciden."
-            : "Todos los Ecosistemas en balance estacional."}
+            : "Litoral y bosque seco en balance estacional."}
       </div>
 
       <div
@@ -133,7 +134,7 @@
           ? "El mar presenta una anomalía térmica sostenida, pero el bosque seco aún no responde. Seguimos monitoreando de cerca la propagación del impacto."
           : nivel === "rojo"
             ? "El precursor oceánico ha sido confirmado por la reacción anómala de la vegetación en la costa norte. Riesgo de lluvias extremas."
-            : "Tanto el litoral oceánico como la vegetación en costa y sierra mantienen un comportamiento habitual para la temporada. Sin anomalías detectadas."}
+            : "Tanto el litoral oceánico como la vegetación del bosque seco mantienen un comportamiento habitual para la temporada. Sin anomalías detectadas."}
       </div>
     </div>
 
@@ -141,14 +142,14 @@
     <DashboardContainer
       titulo="Monitor de Etapas de Alerta"
       subtitulo="Evaluación del precursor térmico oceánico y confirmación posterior en el bosque seco."
-      tooltip="Fuentes: NOAA OISST v2.1 (Mar) y LANDSAT 8 C2 L2 (Bosque Seco)."
+      tooltip="Fuentes: NOAA OISST v2.1 (Mar) y LANDSAT 8 C2 L2 (Bosque Seco). El umbral de la Etapa 1 opera sobre la anomalía diaria y es un parámetro operativo de Pulso; no es el criterio mensual del ICEN oficial."
     >
       <div class="flex flex-col md:flex-row justify-between gap-8 py-2">
         <!-- Threshold 1: Precursor Oceánico -->
         <ThresholdBar
           valor={data.precursor}
           minVal={-1.0}
-          maxVal={2.0}
+          maxVal={4.0}
           umbral={data.umbral_precursor}
           titulo="1. Precursor Oceánico"
           valorTexto="{data.precursor > 0 ? '+' : ''}{data.precursor.toFixed(
@@ -156,7 +157,7 @@
           )} °C"
           estadoActivo={data.etapa1_activa}
           estadoTexto={data.etapa1_activa ? "ACTIVA" : "INACTIVA"}
-          umbralTexto="> +{data.umbral_precursor} °C (15 días sostenidos)"
+          umbralTexto="Anomalía diaria > +{data.umbral_precursor} °C durante 15 días"
           fechaTexto={data.fecha_precursor}
           state={data.etapa1_activa ? "alerta" : "normal"}
         />
@@ -186,7 +187,7 @@
       <DashboardContainer
         titulo="Evolución Diaria del Precursor"
         subtitulo="Tendencia térmica en la región Niño 1+2 durante los últimos meses."
-        tooltip="La línea punteada naranja representa el umbral de +0.4 °C."
+        tooltip="La línea punteada naranja representa el umbral operativo de Pulso (+{data.umbral_precursor} °C sobre la anomalía diaria)."
       >
         <div class="pt-2">
           <EvolutionChart

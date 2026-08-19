@@ -10,7 +10,7 @@
     { path: "/", label: "Resumen" },
     { path: "/monitoreo", label: "Monitoreo Satelital" },
     { path: "/backtest", label: "Backtest" },
-    { path: "/impacto", label: "Matriz de Impacto" },
+    { path: "/impacto", label: "Validación" },
   ];
 </script>
 
@@ -18,7 +18,9 @@
   class="min-h-screen flex flex-col bg-[#F8FAFC] font-sans selection:bg-amber-100 selection:text-amber-900"
 >
   <!-- Navbar -->
-  <nav class="bg-white/80 backdrop-blur-lg border-b border-slate-200/60 sticky top-0 z-50 shadow-sm">
+  <nav
+    class="bg-white/80 backdrop-blur-lg border-b border-slate-200/60 sticky top-0 z-50 shadow-sm"
+  >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
         <!-- Logo -->
@@ -41,8 +43,12 @@
             >
               {item.label}
               <!-- Animated Bottom Line Indicator -->
-              <span class="absolute bottom-2 left-0 w-full h-[2.5px] rounded-full transform origin-left transition-transform duration-300 ease-out
-                {$page.url.pathname === item.path ? 'bg-red-500 scale-x-100' : 'bg-slate-300 scale-x-0 group-hover:scale-x-100'}"></span>
+              <span
+                class="absolute bottom-2 left-0 w-full h-[2.5px] rounded-full transform origin-left transition-transform duration-300 ease-out
+                {$page.url.pathname === item.path
+                  ? 'bg-red-500 scale-x-100'
+                  : 'bg-slate-300 scale-x-0 group-hover:scale-x-100'}"
+              ></span>
             </a>
           {/each}
         </div>
@@ -75,22 +81,17 @@
         </div>
 
         <div class="flex flex-col md:items-end text-sm text-slate-500 gap-1">
-          <div
-            class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm mb-1"
+          <p
+            class="text-xs text-slate-500 md:text-right max-w-xs leading-relaxed"
           >
-            <span class="relative flex h-2 w-2">
-              <span
-                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
-              ></span>
-              <span
-                class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"
-              ></span>
-            </span>
-            <span class="text-xs font-semibold tracking-wide"
-              >Motores Activos</span
-            >
-          </div>
-          <p class="mt-1 text-slate-400">Desarrollado para el Perú.</p>
+            Datos: NOAA OISST v2.1 · USGS Landsat 8 · MINAM
+          </p>
+          <p
+            class="text-xs text-slate-400 md:text-right max-w-xs leading-relaxed"
+          >
+            Categorías del ICEN según ENFEN (2024), Nota Técnica 01-2024.
+          </p>
+          <p class="mt-2 text-slate-400">Desarrollado para el Perú.</p>
         </div>
       </div>
     </div>
