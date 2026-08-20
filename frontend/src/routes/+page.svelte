@@ -35,7 +35,7 @@
   <title>Pulso</title>
 </svelte:head>
 
-<div class="max-w-5xl mx-auto mt-4">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
   <!-- Header -->
   <header class="mb-12 mt-6 relative">
     <!-- Decorative accent -->
@@ -75,7 +75,7 @@
   {:else if data}
     <!-- Alerta general (Banda principal) -->
     <div
-      class="rounded-3xl p-6 mb-12 shadow-sm border relative overflow-hidden flex flex-col justify-center
+      class="rounded-3xl p-5 sm:p-6 mb-8 sm:mb-12 shadow-sm border relative overflow-hidden flex flex-col justify-center
                 {nivel === 'ambar'
         ? 'bg-gradient-to-br from-amber-50/80 to-white border-amber-200/60'
         : nivel === 'rojo'
@@ -119,7 +119,7 @@
       </div>
 
       <div
-        class="text-3xl font-bold font-slab text-slate-900 mb-2 tracking-tight leading-tight"
+        class="text-2xl sm:text-3xl font-bold font-slab text-slate-900 mb-3 tracking-tight leading-tight"
       >
         {nivel === "ambar"
           ? "Precursor oceánico activo: Sin confirmación territorial."

@@ -9,7 +9,7 @@
 
 <div class="max-w-6xl mx-auto mt-4 px-4 sm:px-6 lg:px-8 py-8">
   <header class="mb-10">
-    <h1 class="text-4xl font-bold font-slab text-slate-900 tracking-tight mb-3">
+    <h1 class="text-3xl sm:text-4xl font-bold font-slab text-slate-900 tracking-tight mb-3">
       Backtest y Validación
     </h1>
     <p class="text-slate-500 max-w-3xl text-[15px] leading-relaxed">

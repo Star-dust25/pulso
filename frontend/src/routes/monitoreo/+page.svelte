@@ -109,7 +109,7 @@
 
 <div class="max-w-6xl mx-auto mt-4 px-4 sm:px-6 lg:px-8 py-8">
   <header class="mb-10">
-    <h1 class="text-4xl font-bold font-slab text-slate-900 tracking-tight mb-3">
+    <h1 class="text-3xl sm:text-4xl font-bold font-slab text-slate-900 tracking-tight mb-3">
       Monitoreo Satelital
     </h1>
     <p class="text-slate-500 max-w-3xl text-[15px] leading-relaxed">
@@ -237,7 +237,7 @@
         </div>
 
         <div
-          class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm h-[650px] relative"
+          class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm h-[400px] sm:h-[500px] md:h-[650px] relative flex flex-col"
         >
           <!-- object-contain, NO object-cover.
                          'cover' recorta los bordes para llenar el contenedor.
@@ -256,7 +256,7 @@
 
           <!-- Dynamic Legend -->
           <div
-            class="absolute bottom-6 left-6 bg-white/95 backdrop-blur px-5 py-4 rounded-xl shadow-lg border border-slate-200/60 pointer-events-none w-64"
+            class="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 bg-white/95 backdrop-blur px-4 sm:px-5 py-3 sm:py-4 rounded-xl shadow-lg border border-slate-200/60 pointer-events-none w-[calc(100%-2rem)] sm:w-64 max-w-xs"
           >
             <p
               class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3"
