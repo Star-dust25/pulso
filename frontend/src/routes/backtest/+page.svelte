@@ -149,12 +149,12 @@
 
         <!-- Image -->
         <div
-          class="rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm bg-white mb-8 -mx-4 sm:mx-0"
+          class="rounded-2xl border border-slate-200/80 shadow-sm bg-white mb-8 overflow-x-auto"
         >
           <img
             src={api("/static/mapas/5_dos_etapas_2015_vs_2017.png")}
             alt="Comparación 2015 vs 2017"
-            class="w-full h-auto"
+            class="w-full h-auto min-w-[800px] lg:min-w-full"
             loading="lazy"
             onerror={(e) =>
               ((e.currentTarget as HTMLElement).style.display = "none")}
