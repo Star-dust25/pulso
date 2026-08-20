@@ -184,7 +184,6 @@
             un evento no anticipado que no aparece contabilizado como tal.
           </p>
         </div>
-      </div>
     </DashboardContainer>
   </div>
 </div>

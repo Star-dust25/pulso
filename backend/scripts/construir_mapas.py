@@ -222,12 +222,18 @@ def aplicar_fondo(img_vis):
     tierra_mask = ee.Image.constant(0).paint(land, 1)
     tierra = hillshade.updateMask(tierra_mask).clip(region_piura)
 
-    # Fronteras / costa
+    # Fronteras internacionales y costa
     costa_mask = ee.Image.constant(0).paint(land, 1, 1)
-    costa = (ee.Image.constant(0).visualize(palette=['#cbd5e1'])
+    costa = (ee.Image.constant(0).visualize(palette=['#94a3b8'])
              .updateMask(costa_mask.eq(1)).clip(region_piura))
 
-    fondo = agua.blend(tierra).blend(costa)
+    # Fronteras departamentales (Level 1)
+    departamentos = ee.FeatureCollection("FAO/GAUL/2015/level1")
+    dept_mask = ee.Image.constant(0).paint(departamentos, 1, 2)
+    dept_bordes = (ee.Image.constant(0).visualize(palette=['#64748b'])
+                   .updateMask(dept_mask.eq(1)).clip(region_piura))
+
+    fondo = agua.blend(tierra).blend(costa).blend(dept_bordes)
 
     # mosaic() en lugar de blend() porque blend hereda el footprint de la
     # imagen superpuesta (img_vis), lo que recorta el mapa y hace perder

@@ -48,6 +48,25 @@
     nino_2015_16: "El Niño 2015-16",
   };
 
+  // Coordenadas y límites para sobreponer ciudades
+  const BBOX = { lon_min: -81.6, lat_min: -6.5, lon_max: -79.0, lat_max: -4.0 };
+  const CIUDADES = [
+    { nombre: "Piura", lon: -80.632, lat: -5.194 },
+    { nombre: "Sullana", lon: -80.685, lat: -4.903 },
+    { nombre: "Talara", lon: -81.271, lat: -4.577 },
+    { nombre: "Paita", lon: -81.107, lat: -5.078 },
+    { nombre: "Chulucanas", lon: -80.162, lat: -5.093 },
+    { nombre: "Sechura", lon: -80.822, lat: -5.556 },
+    { nombre: "Ayabaca", lon: -79.714, lat: -4.639 },
+    { nombre: "Huancabamba", lon: -79.450, lat: -5.239 }
+  ];
+
+  function getPointStyle(lon: number, lat: number) {
+    const x = ((lon - BBOX.lon_min) / (BBOX.lon_max - BBOX.lon_min)) * 100;
+    const y = ((BBOX.lat_max - lat) / (BBOX.lat_max - BBOX.lat_min)) * 100;
+    return `left: ${x}%; top: ${y}%;`;
+  }
+
   const leyendas: Record<
     string,
     { min: string; max: string; gradiente: string }
@@ -218,16 +237,29 @@
 
             <div class="flex flex-col gap-4">
               <div
-                class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm h-[400px] sm:h-[550px] md:h-[750px] lg:h-[850px] flex flex-col"
+                class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm w-full aspect-[26/25] relative"
               >
                 <img
                   src={urlMapa}
                   alt="Mapa de {etiquetas[tabActiva]
                     .titulo} en Piura, periodo {PERIODOS[periodoActivo] ??
                     periodoActivo}"
-                  class="w-full h-full object-contain bg-slate-50"
+                  class="absolute inset-0 w-full h-full object-fill bg-slate-50"
                   loading="lazy"
                 />
+
+                <!-- City Overlays -->
+                {#each CIUDADES as ciudad}
+                  <div
+                    class="absolute flex flex-col items-center justify-center -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                    style={getPointStyle(ciudad.lon, ciudad.lat)}
+                  >
+                    <div class="w-1.5 h-1.5 rounded-full bg-slate-800 shadow-[0_0_0_2px_rgba(255,255,255,0.9)]"></div>
+                    <span class="mt-1 text-[10px] font-bold text-slate-700 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm border border-white/50">
+                      {ciudad.nombre}
+                    </span>
+                  </div>
+                {/each}
               </div>
 
               <!-- Dynamic Legend -->
