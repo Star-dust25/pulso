@@ -17,7 +17,6 @@
 
 import os
 import sys
-
 # backend/ en el path para poder importar 'api', 'core' y 'config'.
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 

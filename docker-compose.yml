@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PULSO_HOST=0.0.0.0
+      - PULSO_PORT=8000
+    volumes:
+      # Montamos el código para que los cambios se reflejen sin reconstruir la imagen (opcional)
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # Asegúrate de que las variables de entorno que necesite el frontend para la API estén aquí
+      - PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
