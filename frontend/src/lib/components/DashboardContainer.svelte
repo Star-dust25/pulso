@@ -12,7 +12,7 @@
 
 <div class="border border-slate-100/80 rounded-2xl bg-white/70 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8 transition-shadow hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
     <!-- Header -->
-    <div class="border-b border-slate-100 px-6 py-5 bg-gradient-to-b from-slate-50/50 to-white/50 rounded-t-2xl">
+    <div class="border-b border-slate-100 px-4 sm:px-6 py-4 sm:py-5 bg-gradient-to-b from-slate-50/50 to-white/50 rounded-t-2xl">
         <div class="flex items-center">
             <span class="font-slab text-2xl font-bold text-slate-800 tracking-tight">
                 {titulo}
@@ -35,7 +35,7 @@
     </div>
     
     <!-- Body -->
-    <div class="p-6">
+    <div class="p-4 sm:p-6">
         {#if children}
             {@render children()}
         {/if}

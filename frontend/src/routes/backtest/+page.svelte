@@ -149,7 +149,7 @@
 
         <!-- Image -->
         <div
-          class="rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm bg-white"
+          class="rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm bg-white mb-8 -mx-4 sm:mx-0"
         >
           <img
             src={api("/static/mapas/5_dos_etapas_2015_vs_2017.png")}

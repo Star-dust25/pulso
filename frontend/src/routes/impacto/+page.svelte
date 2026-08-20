@@ -92,7 +92,7 @@
         </div>
 
         <div
-          class="rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm bg-white mb-8"
+          class="rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm bg-white mb-8 -mx-4 sm:mx-0"
         >
           <img
             src={api("/static/mapas/3_validacion_icen.png")}

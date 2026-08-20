@@ -24,7 +24,7 @@
 </script>
 
 <div
-  class="min-h-screen flex flex-col bg-[#F8FAFC] font-sans selection:bg-amber-100 selection:text-amber-900"
+  class="min-h-screen flex flex-col bg-[#F8FAFC] font-sans selection:bg-amber-100 selection:text-amber-900 overflow-x-hidden"
 >
   <!-- Navbar -->
   <nav
