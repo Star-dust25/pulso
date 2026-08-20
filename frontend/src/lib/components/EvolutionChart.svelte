@@ -149,7 +149,7 @@
   </div>
 
   <div
-    class="flex items-start gap-3 text-sm text-slate-600 bg-slate-50/80 border border-slate-200/60 rounded-xl p-5 shadow-sm"
+    class="flex items-start gap-3 text-base text-slate-600 bg-slate-50/80 border border-slate-200/60 rounded-xl p-5 shadow-sm"
   >
     <div class="w-2 h-2 rounded-full bg-slate-400 mt-1.5 shrink-0"></div>
     <p class="leading-relaxed">

@@ -118,165 +118,154 @@
     </p>
   </header>
 
-  <!--
-    Los dos filtros en UNA fila: ecosistema a la izquierda, periodo a la
-    derecha. En pantallas estrechas 'flex-col' los apila igual que antes,
-    asi que no se pierde nada en movil.
-  -->
-  <div
-    class="border-b border-slate-100 pb-8 mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
-  >
-    <!-- Ecosistema -->
-    <div class="flex flex-wrap gap-3">
-      {#each Object.keys(etiquetas) as tab}
-        <button
-          class="px-5 py-2.5 rounded-full text-sm font-semibold transition-all shadow-sm {tabActiva ===
-          tab
-            ? 'bg-slate-800 text-white shadow-md'
-            : 'bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300'}"
-          onclick={() => (tabActiva = tab)}
-        >
-          {tab}
-        </button>
-      {/each}
-    </div>
-
-    <!-- Periodo -->
-    {#if periodosDisponibles.length > 1}
-      <div class="flex flex-wrap items-center gap-2 lg:justify-end">
-        <span
-          class="text-xs font-semibold uppercase tracking-wider text-slate-400 mr-1"
-          >Periodo</span
-        >
-        {#each periodosDisponibles as p}
-          <button
-            class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all {periodoActivo ===
-            p
-              ? 'bg-slate-100 text-slate-800 ring-1 ring-slate-300'
-              : 'text-slate-400 hover:text-slate-700'}"
-            onclick={() => (periodoActivo = p)}
-          >
-            {PERIODOS[p]}
-          </button>
-        {/each}
+  <div class="flex flex-col lg:flex-row gap-8 items-start">
+    <!-- Sidebar de Filtros -->
+    <aside class="w-full lg:w-64 shrink-0 flex flex-col gap-8 bg-white/50 backdrop-blur border border-slate-200/60 rounded-2xl p-5 shadow-sm">
+      <!-- Ecosistema -->
+      <div>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 ml-1">Ecosistema</h3>
+        <div class="flex flex-col gap-1">
+          {#each Object.keys(etiquetas) as tab}
+            <button
+              class="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all {tabActiva === tab ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 border border-transparent'}"
+              onclick={() => (tabActiva = tab)}
+            >
+              {tab}
+            </button>
+          {/each}
+        </div>
       </div>
-    {/if}
-  </div>
 
-  {#if loading}
-    <div class="flex justify-center py-20">
-      <div
-        class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"
-      ></div>
-    </div>
-  {:else if error}
-    <div class="bg-red-50 text-red-700 p-5 rounded-xl border border-red-100">
-      <p class="font-semibold mb-1">No se pudo cargar el índice de mapas</p>
-      <p class="text-sm font-light">{error}</p>
-    </div>
-  {:else}
-    <DashboardContainer
-      titulo={etiquetas[tabActiva].titulo}
-      subtitulo={`Sensor: ${etiquetas[tabActiva].sensor} — Resolución: ${etiquetas[tabActiva].res}`}
-    >
-      {#if !urlMapa}
-        <div class="text-center py-20 text-slate-400">
-          <p>
-            No hay mapa disponible para {tabActiva} · {PERIODOS[
-              periodoActivo
-            ] ?? periodoActivo}.
-          </p>
-          {#if mapaActual?.error}
-            <!-- El motivo del fallo, no un mensaje genérico.
-                             Si la generación falló por un timeout de Earth
-                             Engine, quien mira debe poder saberlo. -->
-            <p class="text-xs mt-2 font-mono text-slate-400">
-              {mapaActual.error}
-            </p>
-          {/if}
-          <!-- Antes decía "la rutina diaria volverá a intentarlo", en
-                         futuro y sin matices. GitHub desactiva los workflows
-                         programados tras 60 días sin actividad en el
-                         repositorio, así que esa promesa puede no cumplirse
-                         sin que nada lo indique. -->
-          <p class="text-xs mt-2">
-            Se puede regenerar con <code class="font-mono"
-              >scripts/construir_mapas.py</code
-            >, o desde la rutina programada de GitHub Actions si sigue activa.
-          </p>
-        </div>
-      {:else}
-        <!-- Procedencia del dato.
-                     El script ahora CONSERVA el mapa del día anterior si la
-                     regeneración falla, en vez de borrarlo del índice. Ese
-                     arreglo solo es honesto si la fecha se muestra: si no,
-                     sería servir una imagen vieja en silencio. -->
-        <div
-          class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 text-xs text-slate-400"
-        >
-          {#if mapaActual.generado}
-            <span>Generado el {mapaActual.generado}</span>
-          {/if}
-          {#if mapaActual.desde && mapaActual.hasta}
-            <span class="text-slate-300">·</span>
-            <span>Composición {mapaActual.desde} → {mapaActual.hasta}</span>
-          {/if}
-          {#if mapaActual.kpi !== null && mapaActual.kpi !== undefined}
-            <span class="text-slate-300">·</span>
-            <span
-              >Media {mapaActual.banda}:
-              <strong class="text-slate-600">{mapaActual.kpi}</strong
-              >{etiquetas[tabActiva].unidad}</span
-            >
-          {/if}
-          {#if mapaActual.error_ultimo_intento}
-            <span class="text-amber-600 font-medium">
-              · La regeneración de hoy falló; se muestra la imagen anterior.
-            </span>
-          {/if}
-        </div>
-
-        <div
-          class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm h-[400px] sm:h-[550px] md:h-[750px] lg:h-[850px] relative flex flex-col"
-        >
-          <!-- object-contain, NO object-cover.
-                         'cover' recorta los bordes para llenar el contenedor.
-                         En una foto da igual; en un mapa geográfico significa
-                         que estás mostrando menos territorio del que dice la
-                         leyenda, sin avisar. Un mapa recortado miente sobre
-                         su propia extensión. -->
-          <img
-            src={urlMapa}
-            alt="Mapa de {etiquetas[tabActiva]
-              .titulo} en Piura, periodo {PERIODOS[periodoActivo] ??
-              periodoActivo}"
-            class="w-full h-full object-contain bg-slate-50"
-            loading="lazy"
-          />
-
-          <!-- Dynamic Legend -->
-          <div
-            class="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 bg-white/95 backdrop-blur px-4 sm:px-5 py-3 sm:py-4 rounded-xl shadow-lg border border-slate-200/60 pointer-events-none w-[calc(100%-2rem)] sm:w-64 max-w-xs"
-          >
-            <p
-              class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3"
-            >
-              Escala de Valores
-            </p>
-            <div
-              class="h-3 w-full rounded-full bg-gradient-to-r {leyendas[
-                tabActiva
-              ].gradiente}"
-            ></div>
-            <div
-              class="flex justify-between mt-2 text-xs font-semibold text-slate-500"
-            >
-              <span>{leyendas[tabActiva].min}</span>
-              <span>{leyendas[tabActiva].max}</span>
-            </div>
+      <!-- Periodo -->
+      {#if periodosDisponibles.length > 1}
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 ml-1">Periodo</h3>
+          <div class="flex flex-col gap-1">
+            {#each periodosDisponibles as p}
+              <button
+                class="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all {periodoActivo === p ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 border border-transparent'}"
+                onclick={() => (periodoActivo = p)}
+              >
+                {PERIODOS[p]}
+              </button>
+            {/each}
           </div>
         </div>
       {/if}
-    </DashboardContainer>
-  {/if}
+    </aside>
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 min-w-0 w-full">
+      {#if loading}
+        <div class="flex justify-center py-20">
+          <div
+            class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"
+          ></div>
+        </div>
+      {:else if error}
+        <div class="bg-red-50 text-red-700 p-5 rounded-xl border border-red-100">
+          <p class="font-semibold mb-1">No se pudo cargar el índice de mapas</p>
+          <p class="text-sm font-light">{error}</p>
+        </div>
+      {:else}
+        <DashboardContainer
+          titulo={etiquetas[tabActiva].titulo}
+          subtitulo={`Sensor: ${etiquetas[tabActiva].sensor} — Resolución: ${etiquetas[tabActiva].res}`}
+        >
+          {#if !urlMapa}
+            <div class="text-center py-20 text-slate-400">
+              <p>
+                No hay mapa disponible para {tabActiva} · {PERIODOS[
+                  periodoActivo
+                ] ?? periodoActivo}.
+              </p>
+              {#if mapaActual?.error}
+                <p class="text-xs mt-2 font-mono text-slate-400">
+                  {mapaActual.error}
+                </p>
+              {/if}
+              <p class="text-xs mt-2">
+                Se puede regenerar con <code class="font-mono"
+                  >scripts/construir_mapas.py</code
+                >, o desde la rutina programada de GitHub Actions si sigue activa.
+              </p>
+            </div>
+          {:else}
+            <div
+              class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 text-xs text-slate-400"
+            >
+              {#if mapaActual.generado}
+                <span>Generado el {mapaActual.generado}</span>
+              {/if}
+              {#if mapaActual.desde && mapaActual.hasta}
+                <span class="text-slate-300">·</span>
+                <span>Composición {mapaActual.desde} → {mapaActual.hasta}</span>
+              {/if}
+              {#if mapaActual.kpi !== null && mapaActual.kpi !== undefined}
+                <span class="text-slate-300">·</span>
+                <span
+                  >Media {mapaActual.banda}:
+                  <strong class="text-slate-600">{mapaActual.kpi}</strong
+                  >{etiquetas[tabActiva].unidad}</span
+                >
+              {/if}
+              {#if mapaActual.error_ultimo_intento}
+                <span class="text-amber-600 font-medium">
+                  · La regeneración de hoy falló; se muestra la imagen anterior.
+                </span>
+              {/if}
+            </div>
+
+            <div class="flex flex-col gap-4">
+              <div
+                class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm h-[400px] sm:h-[550px] md:h-[750px] lg:h-[850px] flex flex-col"
+              >
+                <img
+                  src={urlMapa}
+                  alt="Mapa de {etiquetas[tabActiva]
+                    .titulo} en Piura, periodo {PERIODOS[periodoActivo] ??
+                    periodoActivo}"
+                  class="w-full h-full object-contain bg-slate-50"
+                  loading="lazy"
+                />
+              </div>
+
+              <!-- Dynamic Legend -->
+              <div class="w-full">
+                <div
+                  class="w-full bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80"
+                >
+                  <div class="flex items-center gap-2 mb-3.5">
+                    <div class="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      Escala de Valores
+                    </p>
+                  </div>
+                  
+                  <div class="relative">
+                    <div
+                      class="h-3.5 w-full rounded-full ring-1 ring-inset ring-black/10 shadow-inner bg-gradient-to-r {leyendas[
+                        tabActiva
+                      ].gradiente}"
+                    ></div>
+                    
+                    <div class="flex justify-between items-start mt-2 px-0.5">
+                      <div class="flex flex-col items-start gap-1">
+                        <div class="w-px h-1.5 bg-slate-300 ml-1"></div>
+                        <span class="text-xs font-bold text-slate-700">{leyendas[tabActiva].min}</span>
+                      </div>
+                      <div class="flex flex-col items-end gap-1">
+                        <div class="w-px h-1.5 bg-slate-300 mr-1"></div>
+                        <span class="text-xs font-bold text-slate-700">{leyendas[tabActiva].max}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {/if}
+        </DashboardContainer>
+      {/if}
+    </main>
+  </div>
 </div>
