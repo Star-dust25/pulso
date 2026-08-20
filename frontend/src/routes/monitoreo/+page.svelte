@@ -237,7 +237,7 @@
         </div>
 
         <div
-          class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm h-[400px] sm:h-[500px] md:h-[650px] relative flex flex-col"
+          class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm h-[400px] sm:h-[550px] md:h-[750px] lg:h-[850px] relative flex flex-col"
         >
           <!-- object-contain, NO object-cover.
                          'cover' recorta los bordes para llenar el contenedor.

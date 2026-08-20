@@ -23,8 +23,7 @@
       titulo="Validación externa contra el índice oficial (ICEN)"
       subtitulo="Reconstruimos el Índice Costero El Niño desde datos satelitales crudos, aplicando el mismo criterio de cálculo: media móvil de 3 meses de la anomalía SST en la región Niño 1+2."
     >
-      <div class="p-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-2">
           <!-- Metric Card 1: Correlación -->
           <div
             class="bg-white p-5 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-slate-200/60 relative overflow-hidden group hover:shadow-md transition-shadow"
@@ -156,7 +155,6 @@
             correlograma y el contraste con el control.
           </p>
         </div>
-      </div>
     </DashboardContainer>
   </div>
 </div>
