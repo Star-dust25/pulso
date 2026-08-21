@@ -212,8 +212,8 @@ def aplicar_fondo(img_vis):
     region_piura = ee.Geometry.BBox(*BBOX_PIURA_COORDS)
     land = ee.FeatureCollection("USDOS/LSIB_SIMPLE/2017")
 
-    # Fondo base (agua)
-    agua = ee.Image.constant(0).visualize(palette=['#f1f5f9']).clip(region_piura)
+    # Fondo base (agua) - Azul más oscuro/notorio para diferenciar de tierra
+    agua = ee.Image.constant(0).visualize(palette=['#bfdbfe']).clip(region_piura)
 
     # Tierra (hillshade sutil para dar contexto de relieve)
     srtm = ee.Image("USGS/SRTMGL1_003")

@@ -4,6 +4,7 @@
   import DashboardContainer from "$lib/components/DashboardContainer.svelte";
   import ThresholdBar from "$lib/components/ThresholdBar.svelte";
   import EvolutionChart from "$lib/components/EvolutionChart.svelte";
+  import MsaviBarChart from "$lib/components/MsaviBarChart.svelte";
 
   let data: any = $state(null);
   let loading = $state(true);
@@ -37,25 +38,6 @@
 
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
   <!-- Header -->
-  <header class="mb-12 mt-6 relative">
-    <!-- Decorative accent -->
-    <div
-      class="absolute -top-10 -left-10 w-32 h-32 bg-gradient-to-br from-amber-200 to-red-100 rounded-full blur-3xl opacity-40 pointer-events-none"
-    ></div>
-
-    <div class="relative">
-      <p
-        class="text-slate-700 max-w-4xl text-lg sm:text-xl leading-relaxed font-light"
-      >
-        <strong class="font-semibold text-slate-900"
-          >Sistema de Alerta Temprana ante El Niño Costero.</strong
-        >
-        Detección en dos etapas: anomalía térmica del litoral y respuesta del bosque
-        seco, sobre datos satelitales de NOAA y USGS y la cartografía de ecosistemas
-        del Gobierno Regional de Piura.
-      </p>
-    </div>
-  </header>
 
   {#if loading}
     <div class="flex flex-col justify-center items-center py-32 space-y-4">
@@ -193,6 +175,25 @@
       </div>
     </DashboardContainer>
 
+    {#if data.msavi_mensual && data.msavi_mensual.length > 0}
+      <!-- Dashboard Content: serie mensual de z(MSAVI), version "en vivo" del
+           panel Etapa 2 que ya existe en el backtest historico. Va justo
+           debajo del Monitor de Etapas de Alerta, a pedido explicito, para
+           que la Etapa 2 no dependa solo del numero suelto de la barra. -->
+      <DashboardContainer
+        titulo="Confirmación Territorial — Serie Mensual"
+        subtitulo="Anomalía z(MSAVI) del bosque seco, últimos meses. El mismo indicador que confirmó el desastre de 2017."
+        tooltip="Cada barra es el compuesto satelital mensual (Landsat 8) del bosque seco. La línea roja punteada es el umbral de confirmación (+{data.umbral_msavi})."
+      >
+        <div class="pt-2">
+          <MsaviBarChart
+            data={data.msavi_mensual}
+            umbral_msavi={data.umbral_msavi}
+          />
+        </div>
+      </DashboardContainer>
+    {/if}
+
     {#if data.historico && data.historico.length > 0}
       <!-- Dashboard Content: Evolución Histórica -->
       <DashboardContainer
@@ -204,6 +205,7 @@
           <EvolutionChart
             data={data.historico}
             umbral_precursor={data.umbral_precursor}
+            umbral_magnitud={data.umbral_magnitud}
           />
         </div>
       </DashboardContainer>

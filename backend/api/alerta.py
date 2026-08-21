@@ -4,7 +4,7 @@ import pandas as pd
 
 from core.core_alerta import (
     cargar_diario, anomalia_diaria, emitir_episodios, serie_msavi,
-    UMBRAL_PRECURSOR, UMBRAL_MSAVI,
+    UMBRAL_PRECURSOR, UMBRAL_MSAVI, UMBRAL_MAGNITUD,
 )
 
 router = APIRouter()
@@ -24,6 +24,13 @@ cache_msavi = TTLCache(maxsize=1, ttl=3600)
 # empiece despues de esa fecha el endpoint devuelve una lista vacia sin
 # error. Una constante temporal escrita a mano es una bomba de relojeria.
 VENTANA_GRAFICO_DIAS = 420
+
+# Ventana del panel mensual de z(MSAVI), en MESES, no en dias: la serie de
+# vegetacion es mensual, asi que medirla en dias no tiene sentido y
+# desalinearia el corte respecto a los meses ya calculados. 18 meses da
+# año y medio de contexto, similar a la ventana que usan los paneles del
+# backtest historico (por ejemplo, el de 2015-16 cubre 16 meses).
+VENTANA_MSAVI_MESES = 18
 
 
 @cached(cache_alerta)
@@ -97,12 +104,38 @@ def get_estado():
         for fecha, fila in recent.iterrows()
     ]
 
+    # --- Serie mensual de z(MSAVI) para el panel "estado actual" ---
+    #
+    # Reutiliza 'veg' completo (no solo 'zs', que ya viene sin nulos): los
+    # meses futuros del año en curso existen en el CSV con valor nulo, y
+    # conservarlos deja huecos visibles en vez de que la barra del mes
+    # que aun no ocurrio desaparezca sin explicacion.
+    inicio_msavi = veg.index.max() - pd.DateOffset(months=VENTANA_MSAVI_MESES)
+    veg_reciente = veg.loc[inicio_msavi:, ['z_msavi']].copy()
+    veg_reciente = veg_reciente.astype(object).where(
+        pd.notnull(veg_reciente), None)
+
+    msavi_mensual = [
+        {
+            "mes": fecha.strftime('%Y-%m'),
+            "z_msavi": fila["z_msavi"],
+        }
+        for fecha, fila in veg_reciente.iterrows()
+    ]
+
     return {
         "etapa1_activa": etapa1_activa,
         "etapa2_activa": etapa2_activa,
         "precursor": float(ultimo['precursor']),
         "z_msavi": float(z_act),
         "umbral_precursor": float(UMBRAL_PRECURSOR),
+        # Umbral de MAGNITUD (no de alerta): el pico minimo de precursor
+        # oceanico que hace falta para escalar a Etapa 2, ademas del criterio
+        # de persistencia de 15 dias. Es la segunda linea de referencia que
+        # ya se dibuja en los paneles ETAPA 1 del backtest historico
+        # (core_alerta.graficar); el grafico de evolucion diaria del Resumen
+        # solo tenia la primera.
+        "umbral_magnitud": float(UMBRAL_MAGNITUD),
         "umbral_msavi": float(UMBRAL_MSAVI),
         "fecha_precursor": ultimo.name.strftime('%d-%b-%Y'),
         # El compuesto MSAVI del mes EN CURSO se calcula con las escenas
@@ -118,4 +151,10 @@ def get_estado():
         "motivo": motivo,
         "ultimo_dato": df.index.max().strftime('%Y-%m-%d'),
         "historico": historico_records,
+        # Serie mensual de z(MSAVI), para dibujar el mismo tipo de barras
+        # que ya usa el panel "Etapa 2" del backtest historico, pero con
+        # los meses recientes. 'z_msavi' puede venir null en meses futuros
+        # del año en curso o sin escenas utiles: es informacion honesta
+        # (mes no observado), no un cero.
+        "msavi_mensual": msavi_mensual,
     }
