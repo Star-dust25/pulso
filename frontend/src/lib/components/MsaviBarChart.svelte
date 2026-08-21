@@ -107,7 +107,8 @@
           x: {
             grid: { display: false },
             ticks: {
-              font: { family: "'Rethink Sans', sans-serif", size: 11 },
+              font: { family: "'Rethink Sans', sans-serif", size: 13 },
+              color: "#475569",
               maxRotation: 0,
               autoSkip: true,
               maxTicksLimit: 10,
@@ -122,7 +123,10 @@
             suggestedMin: yMin,
             grid: { color: "#f1f5f9" },
             border: { display: false },
-            ticks: { font: { family: "'Rethink Sans', sans-serif" } },
+            ticks: {
+              font: { family: "'Rethink Sans', sans-serif", size: 13 },
+              color: "#475569",
+            },
           },
         },
       },
@@ -193,11 +197,11 @@
   </div>
 
   <div
-    class="flex items-start gap-3 text-sm text-slate-600 bg-slate-50/80 border border-slate-200/60 rounded-xl p-5 shadow-sm"
+    class="flex items-start gap-4 text-base text-slate-700 bg-slate-50/80 border border-slate-200 rounded-xl p-6 shadow-sm"
   >
-    <div class="w-2 h-2 rounded-full bg-slate-400 mt-1.5 shrink-0"></div>
+    <div class="w-2 h-2 rounded-full bg-slate-500 mt-2 shrink-0"></div>
     <p class="leading-relaxed">
-      <strong class="font-bold text-slate-800">¿Cómo leer este gráfico?</strong>
+      <strong class="font-bold text-slate-900">¿Cómo leer este gráfico?</strong>
       Cada barra es el compuesto satelital mensual del bosque seco, expresado como
       anomalía z(MSAVI). Las barras rojas alcanzan o superan el umbral de confirmación
       de <strong class="text-red-600">+{umbral_msavi}</strong>; las grises

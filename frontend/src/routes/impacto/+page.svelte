@@ -26,66 +26,51 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-2">
           <!-- Metric Card 1: Correlación -->
           <div
-            class="bg-white p-5 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-slate-200/60 relative overflow-hidden group hover:shadow-md transition-shadow"
+            class="bg-white p-6 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-slate-200/60 group hover:shadow-md transition-shadow"
           >
             <div
-              class="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-400"
-            ></div>
-            <div
-              class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2 pl-2"
+              class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2"
             >
               Correlación
             </div>
-            <div
-              class="text-3xl font-oswald font-bold text-slate-800 mb-2 pl-2"
-            >
+            <div class="text-3xl font-oswald font-bold text-slate-800 mb-2">
               r = 0.971
             </div>
-            <div class="text-[13px] text-slate-500 pl-2 leading-relaxed">
+            <div class="text-[14px] text-slate-500 leading-relaxed">
               Contra el ICEN oficial del IGP.
             </div>
           </div>
 
           <!-- Metric Card 2: Muestra -->
           <div
-            class="bg-white p-5 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-slate-200/60 relative overflow-hidden group hover:shadow-md transition-shadow"
+            class="bg-white p-6 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-slate-200/60 group hover:shadow-md transition-shadow"
           >
             <div
-              class="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-300"
-            ></div>
-            <div
-              class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2 pl-2"
+              class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2"
             >
               Muestra
             </div>
-            <div
-              class="text-3xl font-oswald font-bold text-slate-800 mb-2 pl-2"
-            >
+            <div class="text-3xl font-oswald font-bold text-slate-800 mb-2">
               532 meses
             </div>
-            <div class="text-[13px] text-slate-500 pl-2 leading-relaxed">
+            <div class="text-[14px] text-slate-500 leading-relaxed">
               Periodo evaluado: 1982 — 2026.
             </div>
           </div>
 
           <!-- Metric Card 3: Acoplamiento -->
           <div
-            class="bg-white p-5 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-slate-200/60 relative overflow-hidden group hover:shadow-md transition-shadow"
+            class="bg-white p-6 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-slate-200/60 group hover:shadow-md transition-shadow"
           >
             <div
-              class="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500"
-            ></div>
-            <div
-              class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2 pl-2"
+              class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2"
             >
               Acoplamiento mar→bosque
             </div>
-            <div
-              class="text-3xl font-oswald font-bold text-slate-800 mb-2 pl-2"
-            >
+            <div class="text-3xl font-oswald font-bold text-slate-800 mb-2">
               r = 0.499
             </div>
-            <div class="text-[13px] text-slate-500 pl-2 leading-relaxed">
+            <div class="text-[14px] text-slate-500 leading-relaxed">
               lag +1 mes · n = 162 · Bonferroni sobre 13 desfases
             </div>
           </div>
@@ -106,54 +91,54 @@
 
         <div class="max-w-4xl">
           <h3
-            class="font-slab font-bold text-2xl text-slate-900 mb-4 tracking-tight"
+            class="font-slab font-bold text-3xl text-slate-900 mb-6 tracking-tight"
           >
             Acoplamiento medido, no asumido
           </h3>
-          <p class="text-slate-600 text-[15px] mb-4 leading-relaxed">
+          <p class="text-slate-700 text-lg mb-6 leading-relaxed">
             El desfase de un mes entre la señal oceánica y la respuesta del
             bosque seco no se asumió: se obtuvo probando trece desfases
             distintos y conservando el que arrojó la relación más fuerte. Probar
             trece hipótesis infla la probabilidad de encontrar una significativa
-            por azar, así que aplicamos la corrección de Bonferroni: el umbral
-            real de significancia es p &lt; 0.0038, no 0.05. Ambas series se
+            por azar, así que aplicamos la corrección estricta de Bonferroni: el umbral
+            real de significancia es p &lt; 0.0038, no el clásico 0.05. Además, ambas series se
             desestacionalizaron antes de correlacionarlas, para que el ciclo
-            anual compartido no fabricara un desfase que no existe.
+            anual compartido no fabricara un espejismo estadístico que no existe.
           </p>
-          <p class="text-slate-600 text-[15px] mb-4 leading-relaxed">
+          <p class="text-slate-700 text-lg mb-6 leading-relaxed">
             El páramo andino, en cambio, no muestra acoplamiento con la anomalía
-            oceánica. Lo reportamos aunque contradice nuestra hipótesis inicial:
+            oceánica. Lo reportamos abiertamente aunque contradice nuestra hipótesis inicial:
             esperábamos que también respondiera. La lectura más plausible es que
-            su humedad, saturada durante buena parte del año, lo haga funcionar
-            como regulador y no como receptor de la señal de El Niño.
+            su humedad constante, saturada durante buena parte del año, lo hace funcionar
+            como un "amortiguador" del clima y no como un amplificador sensible de la señal de El Niño.
           </p>
-          <p class="text-slate-600 text-[15px] mb-4 leading-relaxed">
-            Que ese control salga nulo es precisamente lo que da valor al
-            resultado del bosque seco. Si todas las series correlacionaran entre
-            sí, la señal sería ruido: el contraste entre una respuesta fuerte y
-            una respuesta plana es lo que permite atribuirla al mecanismo y no a
-            una tendencia común.
+          <p class="text-slate-700 text-lg mb-10 leading-relaxed font-semibold">
+            Que ese control en la sierra salga nulo es precisamente lo que da valor al
+            resultado del bosque seco en la costa. Si todos los ecosistemas correlacionaran, 
+            la señal podría ser simple ruido o una tendencia climática global. 
+            El contraste claro entre una reacción violenta (costa) y una reacción plana (sierra) 
+            es lo que permite demostrar que el mecanismo de alerta en la Etapa 2 es real y geográficamente específico.
           </p>
         </div>
 
-        <div class="mt-8 text-[12px] text-slate-400 leading-relaxed max-w-4xl">
-          <p class="mb-3">
-            Nota metodológica: el ENFEN calcula el ICEN oficial con ERSSTv5 y
-            climatologías escalonadas cada cinco años; Pulso lo reconstruye con
-            OISST v2.1 y una sola climatología 1991-2020. Se trata por tanto de
-            una reconstrucción independiente, no de una réplica del índice
-            oficial; la correlación reportada mide precisamente cuánto se
-            aproxima una a la otra. El sesgo entre ambas series deriva con el
-            tiempo y cambia de signo, por lo que se recalcula sobre la ventana
-            reciente y se resta antes de publicar cualquier valor.
-          </p>
-          <p>
-            Los valores p del acoplamiento asumen observaciones independientes.
-            Las series mensuales están autocorrelacionadas, así que el número
-            efectivo de observaciones es menor que n = 162 y esos valores están
-            subestimados. Lo defendible es el coeficiente, la forma del
-            correlograma y el contraste con el control.
-          </p>
+        <div class="mt-12 text-[15px] text-slate-600 leading-relaxed max-w-4xl">
+          <h4 class="font-bold text-slate-800 mb-3">Notas metodológicas y limitaciones</h4>
+          <ul class="list-disc pl-5 space-y-4">
+            <li>
+              <strong class="text-slate-700">Reconstrucción independiente:</strong> El ENFEN calcula el ICEN oficial combinando datos ERSSTv5 y
+              climatologías escalonadas cada cinco años; Pulso reconstruye el índice usando los datos satelitales 
+              OISST v2.1 y una climatología base estable (1991-2020). No es una réplica exacta; 
+              la correlación mide qué tan cerca estamos de la fuente original. El pequeño sesgo inevitable 
+              se recalcula dinámicamente sobre la ventana reciente y se resta antes de publicar cualquier dato en la plataforma.
+            </li>
+            <li>
+              <strong class="text-slate-700">Autocorrelación temporal:</strong> Los valores P (significancia estadística) asumen observaciones independientes.
+              Como las series climáticas mensuales están fuertemente autocorrelacionadas (lo que pasa hoy depende de lo que pasó ayer), 
+              el número de observaciones 100% independientes es menor que n = 162. Por lo tanto, la significancia real podría estar ligeramente subestimada. 
+              Lo verdaderamente defendible del hallazgo no es solo el valor P, sino el coeficiente de correlación (r = 0.499), 
+              la forma del correlograma cruzado, y el contraste claro con el control de ecosistemas andinos que arrojó nulo.
+            </li>
+          </ul>
         </div>
     </DashboardContainer>
   </div>

@@ -58,7 +58,7 @@
     { nombre: "Chulucanas", lon: -80.162, lat: -5.093 },
     { nombre: "Sechura", lon: -80.822, lat: -5.556 },
     { nombre: "Ayabaca", lon: -79.714, lat: -4.639 },
-    { nombre: "Huancabamba", lon: -79.450, lat: -5.239 }
+    { nombre: "Huancabamba", lon: -79.45, lat: -5.239 },
   ];
 
   function getPointStyle(lon: number, lat: number) {
@@ -127,26 +127,25 @@
 </svelte:head>
 
 <div class="max-w-6xl mx-auto mt-4 px-4 sm:px-6 lg:px-8 py-8">
-  <header class="mb-10">
-    <h1 class="text-3xl sm:text-4xl font-bold font-slab text-slate-900 tracking-tight mb-3">
-      Monitoreo Satelital
-    </h1>
-    <p class="text-slate-500 max-w-3xl text-[15px] leading-relaxed">
-      Visor de capas de observación de la Tierra. Mapas pre-generados para
-      maximizar la velocidad de respuesta.
-    </p>
-  </header>
-
   <div class="flex flex-col lg:flex-row gap-8 items-start">
     <!-- Sidebar de Filtros -->
-    <aside class="w-full lg:w-64 shrink-0 flex flex-col gap-8 bg-white/50 backdrop-blur border border-slate-200/60 rounded-2xl p-5 shadow-sm">
+    <aside
+      class="w-full lg:w-64 shrink-0 flex flex-col gap-8 bg-white/50 backdrop-blur border border-slate-200/60 rounded-2xl p-5 shadow-sm"
+    >
       <!-- Ecosistema -->
       <div>
-        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 ml-1">Ecosistema</h3>
+        <h3
+          class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 ml-1"
+        >
+          Ecosistema
+        </h3>
         <div class="flex flex-col gap-1">
           {#each Object.keys(etiquetas) as tab}
             <button
-              class="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all {tabActiva === tab ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 border border-transparent'}"
+              class="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all {tabActiva ===
+              tab
+                ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80'
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 border border-transparent'}"
               onclick={() => (tabActiva = tab)}
             >
               {tab}
@@ -158,11 +157,18 @@
       <!-- Periodo -->
       {#if periodosDisponibles.length > 1}
         <div>
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 ml-1">Periodo</h3>
+          <h3
+            class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 ml-1"
+          >
+            Periodo
+          </h3>
           <div class="flex flex-col gap-1">
             {#each periodosDisponibles as p}
               <button
-                class="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all {periodoActivo === p ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 border border-transparent'}"
+                class="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all {periodoActivo ===
+                p
+                  ? 'bg-white text-slate-900 shadow-sm border border-slate-200/80'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 border border-transparent'}"
                 onclick={() => (periodoActivo = p)}
               >
                 {PERIODOS[p]}
@@ -182,7 +188,9 @@
           ></div>
         </div>
       {:else if error}
-        <div class="bg-red-50 text-red-700 p-5 rounded-xl border border-red-100">
+        <div
+          class="bg-red-50 text-red-700 p-5 rounded-xl border border-red-100"
+        >
           <p class="font-semibold mb-1">No se pudo cargar el índice de mapas</p>
           <p class="text-sm font-light">{error}</p>
         </div>
@@ -206,30 +214,31 @@
               <p class="text-xs mt-2">
                 Se puede regenerar con <code class="font-mono"
                   >scripts/construir_mapas.py</code
-                >, o desde la rutina programada de GitHub Actions si sigue activa.
+                >, o desde la rutina programada de GitHub Actions si sigue
+                activa.
               </p>
             </div>
           {:else}
             <div
-              class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 text-xs text-slate-400"
+              class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 text-sm text-slate-700 font-medium"
             >
               {#if mapaActual.generado}
                 <span>Generado el {mapaActual.generado}</span>
               {/if}
               {#if mapaActual.desde && mapaActual.hasta}
-                <span class="text-slate-300">·</span>
+                <span class="text-slate-400">·</span>
                 <span>Composición {mapaActual.desde} → {mapaActual.hasta}</span>
               {/if}
               {#if mapaActual.kpi !== null && mapaActual.kpi !== undefined}
-                <span class="text-slate-300">·</span>
+                <span class="text-slate-400">·</span>
                 <span
                   >Media {mapaActual.banda}:
-                  <strong class="text-slate-600">{mapaActual.kpi}</strong
+                  <strong class="text-slate-900 font-bold">{mapaActual.kpi}</strong
                   >{etiquetas[tabActiva].unidad}</span
                 >
               {/if}
               {#if mapaActual.error_ultimo_intento}
-                <span class="text-amber-600 font-medium">
+                <span class="text-amber-600 font-bold">
                   · La regeneración de hoy falló; se muestra la imagen anterior.
                 </span>
               {/if}
@@ -254,8 +263,12 @@
                     class="absolute flex flex-col items-center justify-center -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                     style={getPointStyle(ciudad.lon, ciudad.lat)}
                   >
-                    <div class="w-1.5 h-1.5 rounded-full bg-slate-800 shadow-[0_0_0_2px_rgba(255,255,255,0.9)]"></div>
-                    <span class="mt-1 text-[10px] font-bold text-slate-700 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm border border-white/50">
+                    <div
+                      class="w-1.5 h-1.5 rounded-full bg-slate-800 shadow-[0_0_0_2px_rgba(255,255,255,0.9)]"
+                    ></div>
+                    <span
+                      class="mt-1 text-[10px] font-bold text-slate-700 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm border border-white/50"
+                    >
                       {ciudad.nombre}
                     </span>
                   </div>
@@ -269,26 +282,32 @@
                 >
                   <div class="flex items-center gap-2 mb-3.5">
                     <div class="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
-                    <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                    <p
+                      class="text-[11px] font-bold text-slate-500 uppercase tracking-widest"
+                    >
                       Escala de Valores
                     </p>
                   </div>
-                  
+
                   <div class="relative">
                     <div
                       class="h-3.5 w-full rounded-full ring-1 ring-inset ring-black/10 shadow-inner bg-gradient-to-r {leyendas[
                         tabActiva
                       ].gradiente}"
                     ></div>
-                    
+
                     <div class="flex justify-between items-start mt-2 px-0.5">
                       <div class="flex flex-col items-start gap-1">
                         <div class="w-px h-1.5 bg-slate-300 ml-1"></div>
-                        <span class="text-xs font-bold text-slate-700">{leyendas[tabActiva].min}</span>
+                        <span class="text-xs font-bold text-slate-700"
+                          >{leyendas[tabActiva].min}</span
+                        >
                       </div>
                       <div class="flex flex-col items-end gap-1">
                         <div class="w-px h-1.5 bg-slate-300 mr-1"></div>
-                        <span class="text-xs font-bold text-slate-700">{leyendas[tabActiva].max}</span>
+                        <span class="text-xs font-bold text-slate-700"
+                          >{leyendas[tabActiva].max}</span
+                        >
                       </div>
                     </div>
                   </div>

@@ -110,9 +110,7 @@
             : "Litoral y bosque seco en balance estacional."}
       </div>
 
-      <div
-        class="text-slate-600 text-base max-w-4xl leading-relaxed font-light"
-      >
+      <div class="text-slate-600 text-xl max-w-4xl leading-relaxed font-light">
         {nivel === "ambar"
           ? "El mar presenta una anomalía térmica sostenida, pero el bosque seco aún no responde. Seguimos monitoreando de cerca la propagación del impacto."
           : nivel === "rojo"
@@ -146,7 +144,7 @@
           )} °C"
           estadoActivo={data.etapa1_activa}
           estadoTexto={data.etapa1_activa ? "ACTIVA" : "INACTIVA"}
-          umbralTexto="Anomalía diaria > +{data.umbral_precursor} °C durante 15 días"
+          umbralTexto="Anomalía diaria ≥ +{data.umbral_precursor} °C (15 días)"
           fechaTexto={data.fecha_precursor}
           state={data.etapa1_activa ? "alerta" : "normal"}
         />

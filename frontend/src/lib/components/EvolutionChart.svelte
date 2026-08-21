@@ -136,7 +136,8 @@
             grid: { display: false },
             ticks: {
               maxTicksLimit: 8,
-              font: { family: "'Rethink Sans', sans-serif" },
+              font: { family: "'Rethink Sans', sans-serif", size: 13 },
+              color: "#475569",
             },
           },
           y: {
@@ -147,7 +148,8 @@
             // signo, un -0.5 se puede leer como medio grado de
             // agua, que seria absurdo.
             ticks: {
-              font: { family: "'Rethink Sans', sans-serif" },
+              font: { family: "'Rethink Sans', sans-serif", size: 13 },
+              color: "#475569",
               callback: (v) => `${Number(v) > 0 ? "+" : ""}${v} °C`,
             },
           },
@@ -259,13 +261,13 @@
   </div>
 
   <div
-    class="flex items-start gap-3 text-sm text-slate-600 bg-slate-50/80 border border-slate-200/60 rounded-xl p-5 shadow-sm"
+    class="flex items-start gap-4 text-base text-slate-700 bg-slate-50/80 border border-slate-200 rounded-xl p-6 shadow-sm"
   >
-    <div class="w-2 h-2 rounded-full bg-slate-400 mt-1.5 shrink-0"></div>
+    <div class="w-2 h-2 rounded-full bg-slate-500 mt-2 shrink-0"></div>
     <p class="leading-relaxed">
-      <strong class="font-bold text-slate-800">¿Cómo leer este gráfico?</strong>
+      <strong class="font-bold text-slate-900">¿Cómo leer este gráfico?</strong>
       La línea gris delgada es la
-      <strong class="text-slate-700">anomalía</strong>
+      <strong class="text-slate-800">anomalía</strong>
       diaria del mar: cuánto se desvía la temperatura respecto a lo normal para
       esa fecha del año, no la temperatura en sí. Es muy volátil y cambia
       bruscamente. Para evitar falsas alarmas, calculamos la línea negra gruesa,
