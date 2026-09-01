@@ -1,11 +1,11 @@
 {
   "LITORAL__actual_2026": {
     "archivo": "LITORAL__actual_2026.png",
-    "kpi": 22.527,
+    "kpi": 22.553,
     "banda": "sst",
-    "desde": "2026-08-01",
-    "hasta": "2026-08-30",
-    "generado": "2026-08-31"
+    "desde": "2026-08-02",
+    "hasta": "2026-08-31",
+    "generado": "2026-09-01"
   },
   "LITORAL__nino_2017": {
     "archivo": "LITORAL__nino_2017.png",
@@ -13,7 +13,7 @@
     "banda": "sst",
     "desde": "2017-01-01",
     "hasta": "2017-05-31",
-    "generado": "2026-08-31"
+    "generado": "2026-09-01"
   },
   "LITORAL__nino_2015_16": {
     "archivo": "LITORAL__nino_2015_16.png",
@@ -21,15 +21,15 @@
     "banda": "sst",
     "desde": "2015-10-01",
     "hasta": "2016-03-31",
-    "generado": "2026-08-31"
+    "generado": "2026-09-01"
   },
   "MONTES__actual_2026": {
     "archivo": "MONTES__actual_2026.png",
     "kpi": 0.174,
     "banda": "MSAVI",
-    "desde": "2026-06-02",
-    "hasta": "2026-08-30",
-    "generado": "2026-08-31"
+    "desde": "2026-06-03",
+    "hasta": "2026-08-31",
+    "generado": "2026-09-01"
   },
   "MONTES__nino_2017": {
     "archivo": "MONTES__nino_2017.png",
@@ -37,7 +37,7 @@
     "banda": "MSAVI",
     "desde": "2017-01-01",
     "hasta": "2017-05-31",
-    "generado": "2026-08-31"
+    "generado": "2026-09-01"
   },
   "MONTES__nino_2015_16": {
     "archivo": "MONTES__nino_2015_16.png",
@@ -45,15 +45,15 @@
     "banda": "MSAVI",
     "desde": "2015-10-01",
     "hasta": "2016-03-31",
-    "generado": "2026-08-31"
+    "generado": "2026-09-01"
   },
   "ANDES__actual_2026": {
     "archivo": "ANDES__actual_2026.png",
     "kpi": 0.074,
     "banda": "NDMI",
-    "desde": "2026-06-02",
-    "hasta": "2026-08-30",
-    "generado": "2026-08-31"
+    "desde": "2026-06-03",
+    "hasta": "2026-08-31",
+    "generado": "2026-09-01"
   },
   "ANDES__nino_2017": {
     "archivo": "ANDES__nino_2017.png",
@@ -61,7 +61,7 @@
     "banda": "NDMI",
     "desde": "2017-01-01",
     "hasta": "2017-05-31",
-    "generado": "2026-08-31"
+    "generado": "2026-09-01"
   },
   "ANDES__nino_2015_16": {
     "archivo": "ANDES__nino_2015_16.png",
@@ -69,6 +69,6 @@
     "banda": "NDMI",
     "desde": "2015-10-01",
     "hasta": "2016-03-31",
-    "generado": "2026-08-31"
+    "generado": "2026-09-01"
   }
 }
