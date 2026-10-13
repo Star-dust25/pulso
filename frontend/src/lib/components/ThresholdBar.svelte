@@ -31,16 +31,14 @@
     tourIdPrefix?: string;
   }>();
 
-  // Clamp value for visual representation
+  // Clamp value for visual representation (cappeado al 88% para que nunca se llene hasta el borde)
   let v_clamp = $derived(Math.max(minVal, Math.min(maxVal, valor)));
-  let percentage = $derived(((v_clamp - minVal) / (maxVal - minVal)) * 100);
+  let percentage = $derived(
+    Math.min(88, Math.max(0, ((v_clamp - minVal) / (maxVal - minVal)) * 100))
+  );
   let umbralPercentage = $derived(
     ((umbral - minVal) / (maxVal - minVal)) * 100,
   );
-
-  let fueraPorArriba = $derived(valor > maxVal);
-  let fueraPorAbajo = $derived(valor < minVal);
-  let fueraDeRango = $derived(fueraPorArriba || fueraPorAbajo);
 
   let colorFill = $derived(theme === "red" ? "bg-red-500" : "bg-emerald-500");
 
@@ -157,13 +155,5 @@
       </div>
     {/if}
 
-    {#if fueraDeRango}
-      <div class="h-px w-full bg-slate-200/60 dark:bg-white/5"></div>
-      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-        El valor queda fuera del rango representable en la barra ({minVal} a {maxVal});
-        la barra aparece {fueraPorArriba ? "completa" : "vacía"} y no refleja la
-        magnitud real.
-      </p>
-    {/if}
   </div>
 </div>

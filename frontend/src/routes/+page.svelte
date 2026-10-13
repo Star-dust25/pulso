@@ -179,7 +179,7 @@
         <ThresholdBar
           valor={data.precursor}
           minVal={-1.0}
-          maxVal={5.0}
+          maxVal={6.0}
           umbral={data.umbral_precursor}
           titulo="1. Precursor Oceánico"
           valorTexto="{data.precursor > 0 ? '+' : ''}{data.precursor.toFixed(
